@@ -26,13 +26,13 @@
     "generate:api": "pnpm --filter @apply/api generate"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.5",
-    "eslint": "^9.39.5",
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^7.1.1",
-    "globals": "^16.5.0",
+    "globals": "^17.14.0",
     "turbo": "^2.11.10",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "typescript-eslint": "^8.72.1"
   },
   "pnpm": {

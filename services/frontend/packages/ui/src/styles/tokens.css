@@ -1,0 +1,95 @@
+/*
+ * Every colour apply paints with lives in this file; theme.css imports it and maps it onto Tailwind.
+ *
+ * Brand: five colours, --happy-feet-1 to -5. A role uses a brand colour untouched wherever it clears WCAG 2.2 AA
+ * in that role (dark mode's primary and success, the orange fill under dark text). Where it can't, the role keeps
+ * the hue and drops the lightness until it does: light mode's primary, destructive and success are text and fills
+ * on a pale page, so they sit deeper.
+ *
+ * Neutrals: a cool slate leaning slightly towards the cyan (hue 200 to 214), so greys sit with the brand instead
+ * of against it. Surfaces carry a trace of saturation; text carries a little more so it never reads as plain grey.
+ *
+ * Every pair is checked in both themes by packages/ui/tests/contrast.test.ts (fails below AA), and
+ * `pnpm --filter @apply/ui contrast` regenerates packages/ui/CONTRAST.md with the ratios.
+ */
+
+/* Light ------------------------------------------------------------------------------------------ */
+:root {
+  /* Brand, as given. */
+  --happy-feet-1: hsl(355.3 85.1% 52.5%); /* #ED1F2F red */
+  --happy-feet-2: hsl(185.5 88.8% 45.5%); /* #0DC8DB cyan */
+  --happy-feet-3: hsl(108.5 68.7% 52.4%); /* #52D932 green */
+  --happy-feet-4: hsl(44.3 100% 58%);     /* #FFC729 yellow */
+  --happy-feet-5: hsl(29.1 100% 51.6%);   /* #FF8008 orange */
+
+  /* Page and ink: a misty blue-white under deep slate. */
+  --background: hsl(204 36% 97.5%);
+  --foreground: hsl(213 32% 13%);
+
+  /* Cards and menus lift to white off the tinted page. */
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(213 32% 13%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(213 32% 13%);
+
+  --muted: hsl(206 26% 92%);
+  --muted-foreground: hsl(211 16% 36%);
+
+  /* Hairlines may be quiet; anything that marks a control must reach 3:1 (WCAG 1.4.11). */
+  --border: hsl(207 22% 86%);
+  --input: hsl(209 13% 51%);
+
+  --primary: hsl(185.5 88.8% 26%);
+  --primary-foreground: hsl(190 45% 98.5%);
+
+  --secondary: hsl(29.1 100% 51.6%);
+  --secondary-foreground: hsl(214 36% 9%);
+
+  /* A wash of the brand cyan for highlighted rows. */
+  --accent: hsl(189 58% 90%);
+  --accent-foreground: hsl(213 32% 13%);
+
+  --destructive: hsl(355.3 85.1% 44%);
+  --destructive-foreground: hsl(190 45% 98.5%);
+
+  --success: hsl(108.5 68.7% 26%);
+  --success-foreground: hsl(190 45% 98.5%);
+
+  --ring: hsl(185.5 88.8% 26%);
+  --radius: 0.5rem;
+}
+
+/* Dark ------------------------------------------------------------------------------------------- */
+.dark {
+  /* Night slate: surfaces step up in lightness as they come forward. */
+  --background: hsl(214 28% 8.5%);
+  --foreground: hsl(200 24% 92%);
+
+  --card: hsl(213 24% 11.5%);
+  --card-foreground: hsl(200 24% 92%);
+  --popover: hsl(213 24% 11.5%);
+  --popover-foreground: hsl(200 24% 92%);
+
+  --muted: hsl(212 21% 15.5%);
+  --muted-foreground: hsl(205 15% 67%);
+
+  --border: hsl(211 17% 21%);
+  --input: hsl(208 12% 47%);
+
+  --primary: hsl(185.5 88.8% 45.5%);
+  --primary-foreground: hsl(215 40% 7%);
+
+  --secondary: hsl(29.1 100% 51.6%);
+  --secondary-foreground: hsl(215 40% 7%);
+
+  --accent: hsl(192 38% 19%);
+  --accent-foreground: hsl(200 24% 92%);
+
+  --destructive: hsl(355.3 85.1% 68%);
+  --destructive-foreground: hsl(215 40% 7%);
+
+  --success: hsl(108.5 68.7% 52.4%);
+  --success-foreground: hsl(215 40% 7%);
+
+  --ring: hsl(185.5 88.8% 45.5%);
+}

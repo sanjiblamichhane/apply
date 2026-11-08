@@ -1,0 +1,8 @@
+**/node_modules
+**/.next
+**/.turbo
+**/test-results
+**/playwright-report
+**/coverage
+**/dist
+**/dist-test

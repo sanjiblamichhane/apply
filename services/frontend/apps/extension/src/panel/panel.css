@@ -1,0 +1,3 @@
+@import "@apply/ui/theme.css";
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+@source "./**/*.{ts,tsx}";

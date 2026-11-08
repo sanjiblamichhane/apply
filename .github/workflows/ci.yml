@@ -1,0 +1,61 @@
+# The same checks as tests/check.sh, on every push and pull request: lint, formatting, every backend suite on
+# throwaway Postgres and bucket (compose.test.yml, named projects, on the runner's container runtime), the Turborepo's typecheck and unit tests, and the
+# browser journeys. No real model and no third-party site is ever reached.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: services/frontend/package.json
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: services/frontend/pnpm-lock.yaml
+      - name: Install the test browser and its system libraries for Playwright
+        working-directory: services/frontend
+        run: pnpm install --frozen-lockfile && pnpm --filter @apply/web exec playwright install --with-deps chromium
+      - name: Pango, for printing documents to PDF
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 fontconfig
+      - name: Every check
+        run: bash tests/check.sh
+      - name: Keep the Playwright reports of a failed run
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-reports
+          path: services/frontend/apps/*/playwright-report
+          retention-days: 7
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: astral-sh/setup-uv@v7
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: services/frontend/package.json
+      - name: Python dependencies (pip-audit)
+        working-directory: services/backend
+        run: uv export --frozen --no-hashes --no-emit-project > /tmp/requirements.txt && uvx pip-audit --disable-pip --no-deps -r /tmp/requirements.txt
+      - name: Node dependencies (pnpm audit)
+        working-directory: services/frontend
+        run: pnpm audit --audit-level moderate

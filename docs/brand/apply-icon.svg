@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" role="img" width="64" height="64" viewBox="0 0 64 64">
+  <title>apply</title>
+  <g>
+    <rect width="64" height="64" rx="15" fill="#07727d"/>
+    <path d="M16 37.5a10.5 10.5 0 1 0 21 0a10.5 10.5 0 1 0 -21 0M37 22L37 53" fill="none" stroke="#f9fcfd" stroke-width="10"/>
+    <circle cx="47" cy="16.5" r="6" fill="#f9fcfd"/>
+  </g>
+</svg>

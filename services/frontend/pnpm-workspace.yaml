@@ -1,0 +1,7 @@
+packages:
+  - "apps/*"
+  - "packages/*"
+
+# minimatch 10 has a published denial-of-service fix only in 11 (pnpm audit); typescript-eslint still asks for ^10.
+overrides:
+  "minimatch@>=10 <11.0.1": "^11.0.1"

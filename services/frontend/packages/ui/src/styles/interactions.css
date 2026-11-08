@@ -1,0 +1,24 @@
+/*
+ * Less motion when the device asks for it (HIG Motion; WCAG 2.3.3).
+ *
+ * Rather than guard each animation, one rule covers them all: with Reduce Motion on, nothing animates or
+ * transitions, so every change of state lands at once. Menus still open, toasts still arrive and pressed
+ * buttons still change colour; nothing slides, fades or grows on the way. Scrolling jumps rather than glides.
+ * Radix waits for an exit animation only when one is set, so with none, closed parts unmount straight away.
+ *
+ * theme.css imports this file into the `components` layer, which Tailwind's `utilities` layer (where
+ * `transition`, `duration-*` and `animate-*` live) would normally beat. Declarations marked `!important` reverse
+ * that order between layers, which is why they are used here.
+ *
+ * `animate-spin` is left alone on purpose: a turning spinner is how a control says it is busy, and one that
+ * stands still looks frozen.
+ */
+@media (prefers-reduced-motion) {
+  *:not(.animate-spin),
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,19 @@
+apply
+Copyright 2026 sanjiblamichhane (https://github.com/sanjiblamichhane)
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+It bundles fonts under the SIL Open Font License 1.1:
+- PDFs embed Arimo and Noto Sans Devanagari (services/backend/src/apply/libs/render/fonts/OFL.txt, with their
+  copyright notices);
+- the web app and the extension use Inter and Noto Sans Devanagari from the @fontsource-variable/inter and
+  @fontsource-variable/noto-sans-devanagari packages (each package carries its licence and notice).
+
+The logo and app icon are drawn from geometry in tools/draw_mark.py and use no font. The interface icons come
+from the @carbon/icons-react package, under the Apache License, Version 2.0. Many of the UI components are
+adapted from shadcn/ui, under the MIT License (services/frontend/packages/ui/LICENSE-shadcn-ui.txt). Third-party packages keep their own licences, listed in
+services/backend/uv.lock and services/frontend/pnpm-lock.yaml.
+
+apply is independent. It isn't affiliated with, endorsed by or sponsored by any job board, model server or
+other service it works with; any names of such services that appear in addresses or data files are used only
+to identify what apply is compatible with.

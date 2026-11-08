@@ -1,0 +1,17 @@
+# Weekly updates for each ecosystem, grouped so a week is one pull request each.
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /services/backend
+    schedule: { interval: weekly }
+    groups: { python: { patterns: ["*"] } }
+  - package-ecosystem: npm
+    directory: /services/frontend
+    schedule: { interval: weekly }
+    groups: { node: { patterns: ["*"] } }
+  - package-ecosystem: github-actions
+    directory: /
+    schedule: { interval: weekly }
+  - package-ecosystem: docker
+    directories: [/services/backend, /services/frontend/apps/web]
+    schedule: { interval: weekly }

@@ -1,0 +1,28 @@
+{
+  "name": "@apply/e2e-harness",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "sanjiblamichhane (https://github.com/sanjiblamichhane)",
+  "homepage": "https://github.com/sanjiblamichhane/apply#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanjiblamichhane/apply.git",
+    "directory": "services/frontend/packages/e2e-harness"
+  },
+  "bugs": {
+    "url": "https://github.com/sanjiblamichhane/apply/issues"
+  },
+  "type": "module",
+  "description": "What browser journeys run against: a throwaway Postgres and bucket (compose.test.yml, named per suite), the real API and worker, a fake model server and fake job boards, all on this machine.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "typescript": "^5.9.3"
+  }
+}

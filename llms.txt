@@ -1,0 +1,25 @@
+# apply
+
+> apply is an open-source (Apache-2.0), self-hosted, local-first agent for applying to jobs, tenders, grants and contracts. It finds or takes pasted opportunities, scores them against a person's profile, writes a tailored résumé and cover letter with the person's own local model (any server speaking /api/chat or /v1/chat/completions), checks every claim against the profile, fills application forms through a browser extension, and tracks each application. It never submits an application: the person reviews and presses Submit. English, Nepali and Spanish.
+
+Install: `git clone https://github.com/sanjiblamichhane/apply.git && cd apply && cp .env.example .env && docker compose up -d`, then open http://localhost:3310.
+
+## Docs
+
+- [README](https://github.com/sanjiblamichhane/apply/blob/main/README.md): what it does, screenshots, quick start
+- [Getting started](https://github.com/sanjiblamichhane/apply/blob/main/docs/getting-started.md): install, first account, the first ten minutes
+- [Use apply from an AI agent (MCP)](https://github.com/sanjiblamichhane/apply/blob/main/docs/mcp.md): connect Claude, Cursor or another MCP client
+- [Browser extension](https://github.com/sanjiblamichhane/apply/blob/main/docs/extension.md): fill application forms from your profile
+- [Self-hosting](https://github.com/sanjiblamichhane/apply/blob/main/docs/self-hosting.md): the model, files, email, backups, exposing it
+- [Sources](https://github.com/sanjiblamichhane/apply/blob/main/docs/sources.md): where listings come from
+- [Auto](https://github.com/sanjiblamichhane/apply/blob/main/docs/auto.md): tracking and preparing strong matches, never submitting
+- [Packs](https://github.com/sanjiblamichhane/apply/blob/main/docs/packs.md): jobs, tenders, grants, contracts
+
+## API
+
+- [OpenAPI schema](https://github.com/sanjiblamichhane/apply/blob/main/services/backend/openapi.json): the HTTP API (a running instance serves docs at /api/docs). Personal tokens (`Authorization: Bearer apl_…`) reach a scoped subset.
+
+## Contributing
+
+- [AGENTS.md](https://github.com/sanjiblamichhane/apply/blob/main/AGENTS.md): layout, commands and rules for coding agents
+- [CONTRIBUTING.md](https://github.com/sanjiblamichhane/apply/blob/main/CONTRIBUTING.md): ground rules, adding a pack or a platform

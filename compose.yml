@@ -1,0 +1,151 @@
+# apply on one machine, one command:
+#
+#   cp .env.example .env                    once: then set POSTGRES_PASSWORD and APPLY_LLM_MODEL in .env (git-ignored)
+#   docker compose up -d                    Postgres, the API, the worker and the web app (http://localhost:3310)
+#   docker compose run --rm --name apply-init api apply init   create your owner account (once)
+#   docker compose up -d postgres storage mail   Postgres, the bucket and the mail catcher only, for development (the
+#                                           API and web run from source)
+#
+# Every secret comes from .env (read by Compose from this folder), never from this file; .env.example lists them.
+# The model is a local model server on this machine (host.docker.internal:11434); name a model it has in .env
+# (APPLY_LLM_MODEL), or choose one in Settings → Model.
+# Files (PDFs, screenshots, uploaded resumes) go to an object storage bucket, never the containers' disks:
+# here a local storage emulator (the storage service, kept in its own volume); in the cloud a real bucket
+# (docs/self-hosting.md).
+# Email (password resets) goes to a local mail catcher, which keeps every message on this machine: read them at
+# http://127.0.0.1:8035. To send real email, set APPLY_SMTP_* in .env to your provider's (docs/self-hosting.md).
+# Everything listens on 127.0.0.1 only. Tests never use this database: they start their own (compose.test.yml).
+# Nothing here is unnamed: every container, image and volume has a fixed name (apply-…), and a one-off command
+# gets one too (docker compose run --rm --name apply-<what> …).
+name: apply
+
+x-backend-env: &backend-env
+  APPLY_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-apply}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}@postgres:5432/${POSTGRES_DB:-apply}
+  APPLY_LLM_BASE_URL: ${APPLY_LLM_BASE_URL:-http://host.docker.internal:11434}
+  APPLY_LLM_API: ${APPLY_LLM_API:-native}
+  APPLY_LLM_MODEL: ${APPLY_LLM_MODEL:-}
+  APPLY_LLM_WRITING_MODEL: ${APPLY_LLM_WRITING_MODEL:-}
+  APPLY_LLM_NUM_CTX: ${APPLY_LLM_NUM_CTX:-16384}
+  APPLY_ALLOWED_ORIGINS: '["http://localhost:3310", "http://127.0.0.1:3310"]'
+  APPLY_STORAGE_ENDPOINT: ${APPLY_STORAGE_ENDPOINT:-http://storage:4443}
+  APPLY_STORAGE_BUCKET: ${APPLY_STORAGE_BUCKET:-apply}
+  APPLY_STORAGE_PROJECT: ${APPLY_STORAGE_PROJECT:-}
+  APPLY_PUBLIC_URL: ${APPLY_PUBLIC_URL:-http://localhost:3310}
+  APPLY_SMTP_HOST: ${APPLY_SMTP_HOST:-mail}
+  APPLY_SMTP_PORT: ${APPLY_SMTP_PORT:-1025}
+  APPLY_SMTP_SECURITY: ${APPLY_SMTP_SECURITY:-none}
+  APPLY_SMTP_USERNAME: ${APPLY_SMTP_USERNAME:-}
+  APPLY_SMTP_PASSWORD: ${APPLY_SMTP_PASSWORD:-}
+  APPLY_MAIL_FROM: ${APPLY_MAIL_FROM:-apply <apply@localhost>}
+
+x-backend: &backend
+  image: apply-backend  # built by the api service, run by both
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    storage:
+      condition: service_started
+    mail:
+      condition: service_started
+  environment: *backend-env
+  extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+services:
+  postgres:
+    container_name: apply-postgres
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-apply}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env (see .env.example)}
+      POSTGRES_DB: ${POSTGRES_DB:-apply}
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # The file bucket: a local storage emulator, its files in the storage volume.
+  storage:
+    container_name: apply-storage
+    image: fsouza/fake-gcs-server:1.56.1
+    command: ["-scheme", "http", "-port", "4443", "-backend", "filesystem", "-filesystem-root", "/storage",
+              "-external-url", "http://storage:4443"]
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4453:4443"
+    volumes:
+      - storage:/storage
+
+  # Email: a local mail catcher keeps whatever apply sends (password reset links) and shows it at http://127.0.0.1:8035.
+  # Its SMTP port is published to 127.0.0.1 too, for the API run from source. Messages are kept in its volume.
+  mail:
+    container_name: apply-mail
+    image: axllent/mailpit:v1.32.0
+    restart: unless-stopped
+    environment:
+      MP_DATABASE: /data/mail.db
+      MP_MAX_MESSAGES: 500
+    ports:
+      - "127.0.0.1:8035:8025"
+      - "127.0.0.1:1035:1025"
+    volumes:
+      - mail:/data
+
+  api:
+    container_name: apply-api
+    <<: *backend
+    build:
+      context: ./services/backend
+      additional_contexts:
+        demo: ./demo  # the demo offered at sign-up
+    # Inside the container the API listens on all its interfaces; the port is published to 127.0.0.1 only.
+    command: ["apply", "serve"]
+    environment:
+      <<: *backend-env
+      APPLY_HOST: 0.0.0.0
+      APPLY_ALLOW_REMOTE: "1"
+      APPLY_COOKIE_SECURE: "0"
+    ports:
+      - "127.0.0.1:8110:8110"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8110/api/v1/health')"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  worker:
+    container_name: apply-worker
+    <<: *backend
+    pull_policy: never  # apply-backend is built here (by api), never pulled
+    command: ["apply", "worker"]
+    depends_on:
+      storage:
+        condition: service_started
+      api:
+        condition: service_healthy
+
+  web:
+    container_name: apply-web
+    build:
+      context: ./services/frontend
+      dockerfile: apps/web/Dockerfile
+    image: apply-web
+    restart: unless-stopped
+    environment:
+      APPLY_API_URL: http://api:8110
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:3310:3310"
+
+volumes:
+  postgres:
+  storage:
+  mail:

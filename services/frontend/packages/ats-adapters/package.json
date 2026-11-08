@@ -1,0 +1,32 @@
+{
+  "name": "@apply/ats-adapters",
+  "version": "0.0.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "sanjiblamichhane (https://github.com/sanjiblamichhane)",
+  "homepage": "https://github.com/sanjiblamichhane/apply#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanjiblamichhane/apply.git",
+    "directory": "services/frontend/packages/ats-adapters"
+  },
+  "bugs": {
+    "url": "https://github.com/sanjiblamichhane/apply/issues"
+  },
+  "type": "module",
+  "description": "Reading and filling job boards' application forms over the standard DOM, for the extension. Never submits.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./fixtures": "./fixtures/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "jsdom": "^30.1.3",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.5"
+  }
+}

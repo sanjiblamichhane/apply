@@ -1,0 +1,399 @@
+{
+  "format": "apply-export/1",
+  "exported_at": "2026-11-01T12:00:00Z",
+  "source": "apply-demo",
+  "profiles": [
+    {
+      "ref": "profile-john",
+      "pack": "job",
+      "kind": "individual",
+      "name": "John Doe",
+      "summary": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore.",
+      "attributes": {
+        "full_name": "John Doe",
+        "email": "john.doe@example.com",
+        "phone": "+1 555 0100",
+        "location": "Springfield",
+        "links": [
+          {
+            "label": "Portfolio",
+            "url": "https://john-doe.example.com"
+          }
+        ],
+        "skills": [
+          "Lorem",
+          "Ipsum",
+          "Dolor",
+          "Consectetur",
+          "Adipiscing"
+        ],
+        "languages": [
+          "English"
+        ],
+        "experience": [
+          {
+            "title": "Senior Lorem Engineer",
+            "organisation": "Example Co",
+            "start": "2021",
+            "end": "",
+            "location": "Springfield",
+            "highlights": [
+              "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+              "Ut enim ad minim veniam, quis nostrud exercitation."
+            ]
+          },
+          {
+            "title": "Ipsum Developer",
+            "organisation": "Sample Studio",
+            "start": "2018",
+            "end": "2021",
+            "location": "Shelbyville",
+            "highlights": [
+              "Duis aute irure dolor in reprehenderit in voluptate."
+            ]
+          }
+        ],
+        "education": [
+          {
+            "qualification": "BSc Lorem Ipsum",
+            "institution": "Example University",
+            "year": "2018"
+          }
+        ]
+      },
+      "tone_instructions": "",
+      "is_default": true
+    }
+  ],
+  "opportunities": [
+    {
+      "ref": "job-1",
+      "pack": "job",
+      "title": "Senior Lorem Engineer",
+      "issuer_name": "Acme Robotics",
+      "source_url": "https://example.com/jobs/job-1",
+      "apply_url": "https://example.com/jobs/job-1/apply",
+      "status": "open",
+      "attributes": {
+        "job_title": "Senior Lorem Engineer",
+        "company_name": "Acme Robotics",
+        "workplace": "remote",
+        "description_markdown": "- Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n- Sed do eiusmod tempor incididunt ut labore et dolore.\n- Ut enim ad minim veniam."
+      },
+      "source_text": "",
+      "first_seen_at": "2026-10-23T12:00:00Z"
+    },
+    {
+      "ref": "job-2",
+      "pack": "job",
+      "title": "Ipsum Developer",
+      "issuer_name": "Example Analytics",
+      "source_url": "https://example.com/jobs/job-2",
+      "apply_url": "https://example.com/jobs/job-2/apply",
+      "status": "open",
+      "attributes": {
+        "job_title": "Ipsum Developer",
+        "company_name": "Example Analytics",
+        "workplace": "hybrid",
+        "description_markdown": "- Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n- Sed do eiusmod tempor incididunt ut labore et dolore.\n- Ut enim ad minim veniam."
+      },
+      "source_text": "",
+      "first_seen_at": "2026-10-27T12:00:00Z"
+    },
+    {
+      "ref": "job-3",
+      "pack": "job",
+      "title": "Dolor Analyst",
+      "issuer_name": "Example Retail",
+      "source_url": "https://example.com/jobs/job-3",
+      "apply_url": "https://example.com/jobs/job-3/apply",
+      "status": "open",
+      "attributes": {
+        "job_title": "Dolor Analyst",
+        "company_name": "Example Retail",
+        "workplace": "onsite",
+        "description_markdown": "- Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n- Sed do eiusmod tempor incididunt ut labore et dolore.\n- Ut enim ad minim veniam."
+      },
+      "source_text": "",
+      "first_seen_at": "2026-10-30T12:00:00Z"
+    }
+  ],
+  "applications": [
+    {
+      "ref": "app-1",
+      "opportunity_ref": "job-1",
+      "profile_ref": "profile-john",
+      "stage_code": "interview",
+      "submitted_at": "2026-10-25T12:00:00Z",
+      "notes": "",
+      "created_at": "2026-10-24T12:00:00Z",
+      "history": [
+        {
+          "stage_code": "new",
+          "entered_at": "2026-10-24T12:00:00Z",
+          "exited_at": "2026-10-25T12:00:00Z",
+          "outcome": "",
+          "note": ""
+        },
+        {
+          "stage_code": "in_progress",
+          "entered_at": "2026-10-25T12:00:00Z",
+          "exited_at": "2026-10-30T12:00:00Z",
+          "outcome": "",
+          "note": ""
+        },
+        {
+          "stage_code": "interview",
+          "entered_at": "2026-10-30T12:00:00Z",
+          "outcome": "",
+          "note": "Lorem ipsum: a call with the team"
+        }
+      ],
+      "documents": [
+        {
+          "ref": "doc-1",
+          "document_type": "resume",
+          "version": 1,
+          "is_active": true,
+          "content_markdown": "# John Doe\njohn.doe@example.com · Springfield\n\n### Experience\n**Senior Lorem Engineer**, Example Co (2021 to now)\n- Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n- Ut enim ad minim veniam, quis nostrud exercitation.\n\n**Ipsum Developer**, Sample Studio (2018 to 2021)\n- Duis aute irure dolor in reprehenderit in voluptate.\n\n### Skills\nLorem, Ipsum, Dolor, Consectetur, Adipiscing\n\n### Education\nBSc Lorem Ipsum, Example University, 2018",
+          "source": "generated",
+          "model": "demo",
+          "profile_ref": "profile-john",
+          "created_at": "2026-10-24T12:00:00Z",
+          "claim_warnings": [],
+          "claims_status": "checked",
+          "reviewed_at": "2026-10-24T14:24:00Z"
+        },
+        {
+          "ref": "doc-2",
+          "document_type": "cover_letter",
+          "version": 1,
+          "is_active": true,
+          "content_markdown": "Dear Hiring Manager,\n\nLorem ipsum dolor sit amet: your Senior Lorem Engineer role is consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nKind regards,\nJohn Doe",
+          "source": "generated",
+          "model": "demo",
+          "profile_ref": "profile-john",
+          "created_at": "2026-10-24T12:00:00Z",
+          "claim_warnings": [],
+          "claims_status": "checked",
+          "reviewed_at": "2026-10-24T14:24:00Z"
+        }
+      ],
+      "submissions": []
+    },
+    {
+      "ref": "app-2",
+      "opportunity_ref": "job-2",
+      "profile_ref": "profile-john",
+      "stage_code": "in_progress",
+      "notes": "",
+      "created_at": "2026-10-28T12:00:00Z",
+      "history": [
+        {
+          "stage_code": "new",
+          "entered_at": "2026-10-28T12:00:00Z",
+          "exited_at": "2026-10-29T12:00:00Z",
+          "outcome": "",
+          "note": ""
+        },
+        {
+          "stage_code": "in_progress",
+          "entered_at": "2026-10-29T12:00:00Z",
+          "outcome": "",
+          "note": ""
+        }
+      ],
+      "documents": [
+        {
+          "ref": "doc-3",
+          "document_type": "resume",
+          "version": 1,
+          "is_active": true,
+          "content_markdown": "# John Doe\njohn.doe@example.com · Springfield\n\n### Experience\n**Senior Lorem Engineer**, Example Co (2021 to now)\n- Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n- Ut enim ad minim veniam, quis nostrud exercitation.\n\n**Ipsum Developer**, Sample Studio (2018 to 2021)\n- Duis aute irure dolor in reprehenderit in voluptate.\n\n### Skills\nLorem, Ipsum, Dolor, Consectetur, Adipiscing\n\n### Education\nBSc Lorem Ipsum, Example University, 2018",
+          "source": "generated",
+          "model": "demo",
+          "profile_ref": "profile-john",
+          "created_at": "2026-10-28T12:00:00Z",
+          "claim_warnings": [],
+          "claims_status": "checked",
+          "reviewed_at": "2026-10-28T14:24:00Z"
+        },
+        {
+          "ref": "doc-4",
+          "document_type": "cover_letter",
+          "version": 1,
+          "is_active": true,
+          "content_markdown": "Dear Hiring Manager,\n\nLorem ipsum dolor sit amet: your Ipsum Developer role is consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\n\nKind regards,\nJohn Doe",
+          "source": "generated",
+          "model": "demo",
+          "profile_ref": "profile-john",
+          "created_at": "2026-10-28T12:00:00Z",
+          "claim_warnings": [],
+          "claims_status": "checked",
+          "reviewed_at": "2026-10-28T14:24:00Z"
+        }
+      ],
+      "submissions": []
+    },
+    {
+      "ref": "app-3",
+      "opportunity_ref": "job-3",
+      "profile_ref": "profile-john",
+      "stage_code": "new",
+      "notes": "",
+      "created_at": "2026-10-31T12:00:00Z",
+      "history": [],
+      "documents": [],
+      "submissions": []
+    }
+  ],
+  "answers": [
+    {
+      "ref": "answer-1",
+      "pack": "job",
+      "key": "notice_period",
+      "question": {
+        "en": "What is your notice period?",
+        "ne": "तपाईंको सूचना अवधि कति हो?"
+      },
+      "answer": "One month",
+      "answer_type": "text",
+      "choices": [],
+      "is_sensitive": false,
+      "source": "user",
+      "position": 0
+    },
+    {
+      "ref": "answer-2",
+      "pack": "job",
+      "key": "work_authorization",
+      "question": {
+        "en": "Are you legally allowed to work in the country of this job?",
+        "ne": "के तपाईंलाई यो जागिरको देशमा काम गर्ने कानुनी अनुमति छ?"
+      },
+      "answer": "yes",
+      "answer_type": "yes_no",
+      "choices": [
+        {
+          "value": "yes",
+          "label": {
+            "en": "Yes",
+            "ne": "हो"
+          }
+        },
+        {
+          "value": "no",
+          "label": {
+            "en": "No",
+            "ne": "होइन"
+          }
+        }
+      ],
+      "is_sensitive": false,
+      "source": "user",
+      "position": 1
+    },
+    {
+      "ref": "answer-3",
+      "pack": "job",
+      "key": "needs_sponsorship",
+      "question": {
+        "en": "Will you now or in future need visa sponsorship?",
+        "ne": "के तपाईंलाई अहिले वा भविष्यमा भिसा प्रायोजन चाहिन्छ?"
+      },
+      "answer": "no",
+      "answer_type": "yes_no",
+      "choices": [
+        {
+          "value": "yes",
+          "label": {
+            "en": "Yes",
+            "ne": "हो"
+          }
+        },
+        {
+          "value": "no",
+          "label": {
+            "en": "No",
+            "ne": "होइन"
+          }
+        }
+      ],
+      "is_sensitive": false,
+      "source": "user",
+      "position": 2
+    },
+    {
+      "ref": "answer-4",
+      "pack": "job",
+      "key": "heard_from",
+      "question": {
+        "en": "How did you hear about this job?",
+        "ne": "तपाईंले यो जागिरबारे कसरी थाहा पाउनुभयो?"
+      },
+      "answer": "The company's careers page",
+      "answer_type": "text",
+      "choices": [],
+      "is_sensitive": false,
+      "source": "user",
+      "position": 3
+    }
+  ],
+  "sources": [],
+  "searches": [
+    {
+      "ref": "search-1",
+      "pack": "job",
+      "name": "Lorem roles",
+      "criteria": {
+        "keywords": [
+          "lorem",
+          "ipsum"
+        ]
+      },
+      "min_score": 0,
+      "enabled": true,
+      "auto_enabled": false
+    }
+  ],
+  "matches": [
+    {
+      "ref": "match-1",
+      "opportunity_ref": "job-1",
+      "search_refs": [
+        "search-1"
+      ],
+      "status": "tracked",
+      "prefilter": {},
+      "score": 86,
+      "score_reasons": [
+        "Lorem ipsum: your experience fits what this role asks for."
+      ],
+      "dealbreakers": [],
+      "score_status": "scored",
+      "scored_at": "2026-10-24T12:00:00Z",
+      "model": "demo",
+      "profile_ref": "profile-john",
+      "application_ref": "app-1"
+    },
+    {
+      "ref": "match-2",
+      "opportunity_ref": "job-3",
+      "search_refs": [
+        "search-1"
+      ],
+      "status": "new",
+      "prefilter": {},
+      "score": 64,
+      "score_reasons": [
+        "Dolor sit amet: some of it fits, some isn't in your profile."
+      ],
+      "dealbreakers": [],
+      "score_status": "scored",
+      "scored_at": "2026-10-31T12:00:00Z",
+      "model": "demo",
+      "profile_ref": "profile-john"
+    }
+  ],
+  "templates": []
+}

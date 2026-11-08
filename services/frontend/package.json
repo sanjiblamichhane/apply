@@ -1,0 +1,45 @@
+{
+  "name": "apply-frontend",
+  "version": "0.1.0",
+  "private": true,
+  "license": "Apache-2.0",
+  "author": "sanjiblamichhane (https://github.com/sanjiblamichhane)",
+  "homepage": "https://github.com/sanjiblamichhane/apply#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sanjiblamichhane/apply.git"
+  },
+  "bugs": {
+    "url": "https://github.com/sanjiblamichhane/apply/issues"
+  },
+  "packageManager": "pnpm@10.30.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "eslint .",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run typecheck test",
+    "test:e2e": "turbo run test:e2e",
+    "generate:api": "pnpm --filter @apply/api generate"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^16.5.0",
+    "turbo": "^2.11.10",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.1"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp",
+      "unrs-resolver"
+    ]
+  }
+}

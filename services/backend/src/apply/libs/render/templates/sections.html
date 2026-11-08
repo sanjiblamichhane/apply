@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="{{lang}}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{title}}</title>
+  <meta name="description" content="{{description}}">
+  <style>
+    :root { --text: #000000; --muted: #333333; --accent: #1f3864; --bg: #ffffff; }
+    * { box-sizing: border-box; }
+    body { margin: 0 auto; max-width: 8.5in; padding: 0.6in; font: 11pt/1.4 Arial, Helvetica, sans-serif; color: var(--text); background: var(--bg); }
+    h1 { margin: 0 0 0.25rem; font-size: 1.9rem; }
+    h2 { margin: 1.4rem 0 0.5rem; padding-bottom: 0.15rem; border-bottom: 1px solid var(--accent); font-size: 1.15rem; color: var(--accent); }
+    h3 { margin: 1rem 0 0.25rem; font-size: 1rem; }
+    p, ul { margin: 0 0 0.5rem; }
+    ul { padding-left: 1.25rem; }
+    li { margin-bottom: 0.2rem; }
+    a { color: var(--accent); }
+    a:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+    @media print { body { padding: 0; } a { color: var(--text); text-decoration: none; } }
+  </style>
+</head>
+<body>
+  <main>
+  <header>
+    <h1>{{name}}</h1>
+    <p>{{contact}}</p>
+  </header>
+  {{content}}
+  </main>
+</body>
+</html>

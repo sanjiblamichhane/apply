@@ -1,0 +1,104 @@
+# The throwaway stacks the tests run on: never compose.yml's database or bucket, and nothing unnamed.
+#
+# Each suite is its own project, so its containers, network and images have fixed names (the browser suites also
+# start the mail catcher, to read the emails apply sends):
+#   apply-test-backend    pytest (tests/conftest.py)
+#   apply-test-web        the web app's browser journeys (packages/e2e-harness)
+#   apply-test-extension  the extension's journeys
+#   apply-test-smoke      tests/docker-smoke.sh: the images compose.yml runs (the "smoke" profile)
+#
+#   docker compose -f compose.test.yml -p apply-test-backend up -d --wait postgres storage
+#   docker compose -f compose.test.yml -p apply-test-backend port postgres 5432
+#   docker compose -f compose.test.yml -p apply-test-backend down -v
+#
+# The database lives in a tmpfs (memory) and the bucket in the emulator's memory: nothing is written to a volume,
+# and the tmpfs over postgres's data directory means its image never makes an anonymous one. Host ports are
+# chosen by the container runtime (127.0.0.1 only), so suites can run side by side; `port` says which.
+name: apply-test
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: ${APPLY_TEST_STACK:-apply-test}-postgres
+    environment:
+      POSTGRES_USER: apply
+      POSTGRES_PASSWORD: apply-test
+      POSTGRES_DB: apply
+    command: ["postgres", "-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "full_page_writes=off"]
+    tmpfs:
+      - /var/lib/postgresql/data
+    ports:
+      - "127.0.0.1::5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U apply -d apply"]
+      interval: 1s
+      timeout: 3s
+      retries: 60
+
+  storage:
+    image: fsouza/fake-gcs-server:1.56.1
+    container_name: ${APPLY_TEST_STACK:-apply-test}-storage
+    command: ["-scheme", "http", "-port", "4443", "-backend", "memory", "-external-url", "http://storage:4443"]
+    ports:
+      - "127.0.0.1::4443"
+
+  # Email: a local mail catcher, its messages read back through its API (http://…:8025/api/v1/…). No volume: in its memory.
+  mail:
+    image: axllent/mailpit:v1.32.0
+    container_name: ${APPLY_TEST_STACK:-apply-test}-mail
+    ports:
+      - "127.0.0.1::1025"
+      - "127.0.0.1::8025"
+
+  # ── the smoke test: the images compose.yml builds, tagged :smoke ────────────
+
+  api:
+    profiles: ["smoke"]
+    build:
+      context: ./services/backend
+      additional_contexts:
+        demo: ./demo  # the demo offered at sign-up
+    image: apply-backend:smoke
+    container_name: apply-test-smoke-api
+    command: ["apply", "serve"]
+    environment: &smoke-env
+      APPLY_DATABASE_URL: postgresql+asyncpg://apply:apply-test@postgres:5432/apply
+      APPLY_STORAGE_ENDPOINT: http://storage:4443
+      APPLY_STORAGE_BUCKET: apply-smoke
+      APPLY_HOST: 0.0.0.0
+      APPLY_ALLOW_REMOTE: "1"
+      APPLY_COOKIE_SECURE: "0"
+      APPLY_ALLOWED_ORIGINS: '["http://127.0.0.1:13399"]'
+    ports:
+      - "127.0.0.1:18199:8110"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      storage:
+        condition: service_started
+
+  worker:
+    profiles: ["smoke"]
+    image: apply-backend:smoke
+    container_name: apply-test-smoke-worker
+    command: ["apply", "worker"]
+    environment: *smoke-env
+    depends_on:
+      api:
+        condition: service_started
+
+  web:
+    profiles: ["smoke"]
+    build:
+      context: ./services/frontend
+      dockerfile: apps/web/Dockerfile
+    image: apply-web:smoke
+    container_name: apply-test-smoke-web
+    environment:
+      APPLY_API_URL: http://api:8110
+    ports:
+      - "127.0.0.1:13399:3310"
+    depends_on:
+      api:
+        condition: service_started
+

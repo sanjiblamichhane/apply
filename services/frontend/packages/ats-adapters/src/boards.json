@@ -1,0 +1,21 @@
+{
+  "$comment": "Every board apply knows by its address: hosts (exact, or *.suffix for a company's own subdomain). The registry and the extension's manifest are made from this file; a test fails if they differ.",
+  "boards": {
+    "board01": { "hosts": ["job-boards.greenhouse.io", "boards.greenhouse.io"] },
+    "board02": { "hosts": ["jobs.lever.co"] },
+    "board03": { "hosts": ["jobs.ashbyhq.com"] },
+    "board04": { "hosts": ["*.myworkdayjobs.com", "*.myworkdaysite.com"] },
+    "board05": { "hosts": ["jobs.smartrecruiters.com"] },
+    "board06": { "hosts": ["apply.workable.com"] },
+    "board07": { "hosts": ["*.recruitee.com"] },
+    "board08": { "hosts": ["*.jobs.personio.de", "*.jobs.personio.com"] },
+    "board09": { "hosts": ["*.breezy.hr"] },
+    "board10": { "hosts": ["*.bamboohr.com"] },
+    "board11": { "hosts": ["*.teamtailor.com"] },
+    "board12": { "hosts": ["jobs.jobvite.com"] },
+    "board13": { "hosts": ["*.icims.com"] },
+    "board14": { "hosts": ["*.applytojob.com"] },
+    "board15": { "hosts": ["ats.rippling.com"] },
+    "board16": { "hosts": ["www.dice.com"] }
+  }
+}

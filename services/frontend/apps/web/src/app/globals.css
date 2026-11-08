@@ -1,0 +1,4 @@
+@import "@apply/ui/theme.css";
+@source "../../../../packages/ui/src/**/*.{ts,tsx}";
+@source "../../../../packages/kit/src/**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx}";

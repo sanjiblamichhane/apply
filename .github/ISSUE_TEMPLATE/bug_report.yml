@@ -1,0 +1,38 @@
+name: Something doesn't work
+description: A bug in apply (for a security problem, use private vulnerability reporting instead; see SECURITY.md)
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to make it happen again
+      placeholder: "1. Open …\n2. Press …"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: The version or commit you run.
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where
+      options: [Web app, Browser extension, Auto, Command line, Containers (compose), Something else]
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language you use apply in
+      options: [English, Nepali, Spanish]
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else
+      description: Logs or screenshots, with your own details taken out.

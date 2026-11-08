@@ -39,7 +39,7 @@ jobs:
         run: bash tests/check.sh
       - name: Keep the Playwright reports of a failed run
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-reports
           path: services/frontend/apps/*/playwright-report

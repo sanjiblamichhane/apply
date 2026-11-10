@@ -13,7 +13,7 @@ import { useAutoCounts } from "@/lib/auto";
 
 import { Help } from "./help";
 import { DEFAULT_PACK, useCurrentPack } from "@/lib/pack-choice";
-import { useMe, usePacks, useSignOut } from "@/lib/queries";
+import { useMe, usePacks, useSignOut, useVersion } from "@/lib/queries";
 import { useSidebarCollapsed } from "@/lib/sidebar";
 
 // Grouped as the HIG suggests for sidebars: what's new, finding, applying, then settings.
@@ -110,14 +110,24 @@ export function PackSwitcher() {
   );
 }
 
+/** Where each release is listed, with what changed: compared with the version shown, it says whether to update. */
+const RELEASES = "https://github.com/sanjiblamichhane/apply/releases";
+
 function Account({ collapsed = false }: { collapsed?: boolean }) {
   const { t } = useI18n();
   const me = useMe();
+  const version = useVersion();
   const signOut = useSignOut();
   const router = useRouter();
   return (
     <div className="space-y-2 border-t pt-4">
       {me.data && !collapsed ? <p className="truncate px-3 text-sm text-muted-foreground" title={me.data.email}>{me.data.email}</p> : null}
+      {version.data && !collapsed ? (
+        <a href={RELEASES} target="_blank" rel="noreferrer"
+          className="flex min-h-11 items-center rounded-md px-3 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring">
+          {t("shell.version", { version: version.data })}<span className="sr-only">, {t("shell.version_hint")}</span>
+        </a>
+      ) : null}
       <Button variant="ghost" className={cn("w-full gap-3", collapsed ? "justify-center px-0" : "justify-start")}
         title={collapsed ? t("shell.sign_out") : undefined}
         onClick={() => signOut.mutate(undefined, { onSettled: () => router.replace("/sign-in") })}>

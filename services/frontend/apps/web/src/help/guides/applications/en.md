@@ -11,4 +11,4 @@ Everything you're applying for, in its pipeline.
 
 **Board** and **List** show the same applications; the filter finds one by title or organisation. Each pack has its own stages (see [Packs](../packs/)).
 
-**Delete** on an application removes it, with its documents and history; its posting stays. **Undo** brings it back for a few seconds after. On a wide screen, ✕ closes an application beside the board.
+**Delete** on an application removes it, with its documents and history; its posting stays. **Undo** brings it back for a few seconds after. On a wide screen, an application opens beside the board, and ✕ closes it. Its parts are in tabs: **Documents**, **Application kit**, the details, and **Notes and history**.

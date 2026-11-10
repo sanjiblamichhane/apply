@@ -44,9 +44,11 @@ test("tenders: an organisation profile, a pasted tender, a capability statement,
   await page.getByRole("button", { name: "Add", exact: true }).click();
   await expect(page).toHaveURL(/\/applications\/[0-9A-Z]{26}$/);
   await expect(page.getByRole("heading", { level: 1, name: notice.title })).toBeVisible();
+  await page.getByRole("tab", { name: "The tender" }).click();
   const details = page.getByRole("region", { name: "The tender" });
   await expect(details.getByText("Example City Council")).toBeVisible();
   await expect(details.getByText("Buyer")).toBeVisible();
+  await page.getByRole("tab", { name: "Documents" }).click();
 
   // The capability statement, written from the organisation's profile.
   await page.getByRole("button", { name: /^Write it\W+Capability statement$/ }).click();
@@ -67,6 +69,7 @@ test("tenders: an organisation profile, a pasted tender, a capability statement,
   await page.emulateMedia({ colorScheme: "light" });
 
   // Edit what was read, with the same generic form.
+  await page.getByRole("tab", { name: "The tender" }).click();
   await details.getByRole("button", { name: "Edit the details" }).click();
   await details.getByLabel("Reference").fill("ECC-2026-0142");
   await details.getByRole("button", { name: "Save" }).click();
@@ -107,6 +110,7 @@ test("tenders in Nepali", async ({ page }) => {
   await page.getByLabel("बोलपत्र टाँस्नुहोस्").fill(notice.text);
   await page.locator("form button[type=submit]").first().click();
   await expect(page).toHaveURL(/\/applications\/[0-9A-Z]{26}$/);
+  await page.getByRole("tab", { name: "बोलपत्र" }).click();
   const details = page.getByRole("region", { name: "बोलपत्र" });
   await expect(details.getByText("Example City Council")).toBeVisible();
   await expect(details.getByText("खरिदकर्ता")).toBeVisible();

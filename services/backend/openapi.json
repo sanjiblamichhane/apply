@@ -3632,7 +3632,7 @@
           "review"
         ],
         "summary": "Resolve Warning",
-        "description": "\"It's true\" (kept), or open again.",
+        "description": "\"It's true\" (kept), \"It's wrong\" (with what's true instead, or empty to take it out), or open again.",
         "operationId": "resolve_warning_api_v1_applications__application_id__documents__document_id__warnings__warning_id__post",
         "parameters": [
           {
@@ -3703,6 +3703,88 @@
               }
             },
             "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{application_id}/documents/{document_id}/rewrite": {
+      "post": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Rewrite Document",
+        "description": "Write this document again from this version, with the corrections on its warnings and the notes. 202 with the\npending version; 409 NOTHING_TO_REWRITE with neither.",
+        "operationId": "rewrite_document_api_v1_applications__application_id__documents__document_id__rewrite_post",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rewrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentOut"
+                }
+              }
+            }
+          },
+          "4XX": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Server Error"
+          },
+          "200": {
+            "description": "One is already being written: that one",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DocumentOut"
+                }
+              }
+            }
           }
         }
       }
@@ -3950,6 +4032,74 @@
             "description": "The page",
             "content": {
               "text/html": {}
+            }
+          },
+          "4XX": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Client Error"
+          },
+          "5XX": {
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            },
+            "description": "Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/applications/{application_id}/documents/{document_id}/docx": {
+      "get": {
+        "tags": [
+          "review"
+        ],
+        "summary": "Document Docx",
+        "description": "The version as a Word file (.docx), to edit in a word processor. 409 RENDER_PENDING while it's made.",
+        "operationId": "document_docx_api_v1_applications__application_id__documents__document_id__docx_get",
+        "parameters": [
+          {
+            "name": "application_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Application Id"
+            }
+          },
+          {
+            "name": "document_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Document Id"
+            }
+          },
+          {
+            "name": "download",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Download"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The Word file",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
             }
           },
           "4XX": {
@@ -4859,7 +5009,7 @@
           "tokens"
         ],
         "summary": "Current Token",
-        "description": "Who this is: the extension checks its token here, and speaks the owner's language.",
+        "description": "Who this is: the extension checks its token here, speaks the owner's language and links to the web app.",
         "operationId": "current_token_api_v1_tokens_current_get",
         "responses": {
           "200": {
@@ -6421,17 +6571,44 @@
             "type": "string",
             "title": "Reason"
           },
+          "sentence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sentence",
+            "description": "The sentence the quote is in"
+          },
           "resolved": {
             "anyOf": [
               {
                 "type": "string",
-                "const": "kept"
+                "enum": [
+                  "kept",
+                  "wrong"
+                ]
               },
               {
                 "type": "null"
               }
             ],
             "title": "Resolved"
+          },
+          "correction": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correction",
+            "description": "When wrong: what's true instead (empty: take it out)"
           }
         },
         "type": "object",
@@ -6793,7 +6970,8 @@
               "generated",
               "uploaded",
               "imported",
-              "edited"
+              "edited",
+              "rewritten"
             ],
             "title": "Source"
           },
@@ -7115,6 +7293,7 @@
           "SCORE_CAP_REACHED",
           "DOCUMENT_NOT_READY",
           "WARNING_NOT_FOUND",
+          "NOTHING_TO_REWRITE",
           "RENDER_PENDING",
           "ANSWER_NOT_FOUND",
           "ANSWER_EXISTS",
@@ -9652,6 +9831,20 @@
         "type": "object",
         "title": "Reviewed"
       },
+      "Rewrite": {
+        "properties": {
+          "notes": {
+            "type": "string",
+            "maxLength": 2000,
+            "title": "Notes",
+            "description": "Anything else to change, in the person's words",
+            "default": ""
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "Rewrite"
+      },
       "SearchChanges": {
         "properties": {
           "name": {
@@ -10558,9 +10751,17 @@
             "type": "string",
             "enum": [
               "kept",
+              "wrong",
               "open"
             ],
             "title": "Resolution"
+          },
+          "correction": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Correction",
+            "description": "With wrong: what's true instead. Empty: take it out.",
+            "default": ""
           }
         },
         "additionalProperties": false,

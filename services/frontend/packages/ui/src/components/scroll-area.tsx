@@ -13,6 +13,8 @@ import { cn } from "../lib/utils"
 // - `label` names the scrolling element and puts it in the tab order, so keyboard users can reach and scroll it
 //   (WCAG 2.1.1); `viewportClassName` and `viewportRef` reach the scrolling element itself.
 // - A solid focus outline, drawn inside the edge so the area's rounding never clips it.
+// - The scrolling element is `relative`: what's absolutely placed inside it (a screen reader's hidden label, an
+//   `sr-only` span) is clipped and scrolls with it, instead of reaching past the area and making the page scroll.
 
 type ScrollAreaProps = React.ComponentProps<typeof ScrollAreaPrimitive.Root> & {
   /** Accessible name of the scrolling region. Given one, the region can be focused and scrolled by keyboard. */
@@ -42,7 +44,7 @@ function ScrollArea({
         ref={viewportRef}
         {...(label ? { role: "region", "aria-label": label, tabIndex: 0 } : {})}
         className={cn(
-          "size-full rounded-[inherit] outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&>div]:block!",
+          "relative size-full rounded-[inherit] outline-none focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring [&>div]:block!",
           viewportClassName
         )}
       >

@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, Request, Response, status
 
-from apply.logic import answers, files, kit, review, templates
+from apply.logic import answers, documents, files, kit, review, templates
 from apply.packs import DEFAULT_PACK
 from apply.store.sql.models import User
 
@@ -30,10 +30,32 @@ async def edit_document(
 async def resolve_warning(
     application_id: str, document_id: str, warning_id: str, body: s.WarningResolution, rt: Rt, user: Owner
 ) -> s.DocumentOut:
-    """ "It's true" (kept), or open again."""
+    """ "It's true" (kept), "It's wrong" (with what's true instead, or empty to take it out), or open again."""
     async with rt.db.transaction() as session:
-        doc = await review.resolve(session, user.id, application_id, document_id, warning_id, body.resolution)
+        doc = await review.resolve(
+            session, user.id, application_id, document_id, warning_id, body.resolution, body.correction
+        )
         return s.DocumentOut.model_validate(doc)
+
+
+@reviewing.post(
+    f"{DOC}/rewrite",
+    tags=["review"],
+    status_code=status.HTTP_202_ACCEPTED,
+    responses={200: {"model": s.DocumentOut, "description": "One is already being written: that one"}},
+)
+async def rewrite_document(
+    application_id: str, document_id: str, body: s.Rewrite, response: Response, rt: Rt, user: Owner
+) -> s.DocumentOut:
+    """
+    Write this document again from this version, with the corrections on its warnings and the notes. 202 with the
+    pending version; 409 NOTHING_TO_REWRITE with neither.
+    """
+    async with rt.db.transaction() as session:
+        row, queued = await documents.rewrite(session, user.id, application_id, document_id, body.notes)
+        if not queued:
+            response.status_code = status.HTTP_200_OK
+        return s.DocumentOut.model_validate(row)
 
 
 @reviewing.post(f"{DOC}/review", tags=["review"])
@@ -49,7 +71,11 @@ async def check_document(application_id: str, document_id: str, rt: Rt, user: Ow
         return s.DocumentOut.model_validate(await review.check_again(session, user.id, application_id, document_id))
 
 
-FILES = {"pdf": ("application/pdf", "The PDF"), "html": ("text/html", "The page")}
+FILES = {
+    "pdf": ("application/pdf", "The PDF"),
+    "html": ("text/html", "The page"),
+    "docx": (files.DOCX, "The Word file"),
+}
 # A document's page is shown in a sandboxed frame and opened on its own: it runs nothing and fetches nothing.
 PAGE_CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'; sandbox"
 
@@ -92,6 +118,17 @@ async def document_html(
 ) -> Response:
     """The version in its template, as the page (what's previewed). 409 RENDER_PENDING while it's made."""
     return await _file(application_id, document_id, "html", download, rt, user)
+
+
+@reviewing.get(
+    f"{DOC}/docx",
+    tags=["review"],
+    response_class=Response,
+    responses={200: {"content": {files.DOCX: {}}, "description": "The Word file"}},
+)
+async def document_docx(application_id: str, document_id: str, rt: Rt, user: Reader, download: bool = True) -> Response:
+    """The version as a Word file (.docx), to edit in a word processor. 409 RENDER_PENDING while it's made."""
+    return await _file(application_id, document_id, "docx", download, rt, user)
 
 
 def _template_out(kind: s.TemplateKind, html: str, found) -> s.TemplateOut:

@@ -9,7 +9,9 @@ Two parts, because a small model's prompt alone doesn't stop it embellishing:
   answer must quote the document exactly; a quote that isn't in it is dropped, so a confused reply can't flag
   words the document never said.
 
-Warnings never block: the person removes the line, or says "It's true" (kept), and either is recorded.
+Each warning carries the sentence its words are in. Warnings never block: the person removes the line, says
+"It's true" (kept), or says it's wrong and what's true instead; a rewrite then uses those corrections (and they
+count as the person's own facts in the check of what it writes).
 """
 
 import hashlib
@@ -33,12 +35,18 @@ logger = logging.getLogger("apply.logic.claims")
 
 MARKER = re.compile(r"\[CONFIRM:[^\]]*\]", re.IGNORECASE)
 # A number that claims something: 30%, 12 engineers, $2M, 3x, 5+ years. Dates and contact details are left alone.
+# All of a number's digits ("2024" is never read as "202").
 NUMBER = re.compile(
-    r"(?<![\w./@-])(?:[$€£₹]\s?)?\d{1,3}(?:[,.]\d{3})*(?:\.\d+)?\s?(?:%|\+|x\b|k\b|m\b|million\b|billion\b)?"
+    r"(?<![\w./@-])(?:[$€£₹]\s?)?(?:\d{1,3}(?:[,.]\d{3})+|\d+)(?:\.\d+)?(?![\d,.]?\d)"
+    r"\s?(?:%|\+|x\b|k\b|m\b|million\b|billion\b)?"
     r"(?:\s?(?:years?|yrs?|months?|people|engineers|users|customers|clients|teams?|projects?|countries))?",
     re.IGNORECASE,
 )
 YEAR = re.compile(r"^(19|20)\d\d$")
+# A date in the profile ("2024-06-30", "2024-06") counts only as its year: its month and day back up no claim.
+ISO_DATE = re.compile(r"\b((?:19|20)\d\d)-\d\d(?:-\d\d)?\b")
+SENTENCE_END = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9\[(\"“])")
+SENTENCE_LIMIT = 400
 _MONTH = r"(jan|feb|mar|apr|may|jun|jul|aug|sep|sept|oct|nov|dec)[a-z]*\.?"
 # A letter's date, as apply writes it ("October 27, 2026") or a person might ("27 October 2026").
 DATE_LINE = re.compile(rf"^\s*({_MONTH}\s+\d{{1,2}},?\s+\d{{4}}|\d{{1,2}}\s+{_MONTH},?\s+\d{{4}})\s*$", re.IGNORECASE)
@@ -61,8 +69,8 @@ def rule_warnings(document: str, profile: dict[str, Any]) -> list[dict[str, Any]
     found: list[dict[str, Any]] = []
     for m in MARKER.finditer(document):
         found.append({"kind": "confirm", "quote": m.group(0), "reason": "The writer left this for you to fill in."})
-    profile_text = _plain(json.dumps(profile, ensure_ascii=False))
-    profile_numbers = set(re.findall(r"\d+(?:\.\d+)?", profile_text))
+    profile_text = ISO_DATE.sub(r"\1", _plain(json.dumps(profile, ensure_ascii=False)))
+    profile_numbers = set(re.findall(r"\d+(?:\.\d+)?", re.sub(r"(?<=\d),(?=\d{3})", "", profile_text)))
     for line in document.splitlines():
         if _contact_line(line) or DATE_LINE.match(line) or MARKER.search(line):
             continue
@@ -75,6 +83,52 @@ def rule_warnings(document: str, profile: dict[str, Any]) -> list[dict[str, Any]
                 continue
             found.append({"kind": "number", "quote": quote, "reason": "This number isn't in your profile."})
     return found
+
+
+def _bare(line: str) -> str:
+    """A line as read: no heading marks, bullets, emphasis or link targets."""
+    line = re.sub(r"^\s*(?:#{1,6}\s+|[-*+]\s+|\d+[.)]\s+|>\s*)", "", line)
+    line = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", line)
+    return re.sub(r"\s+", " ", line.replace("**", "").replace("__", "")).strip()
+
+
+def sentence_of(document: str, quote: str) -> str | None:
+    """The sentence (or list line) of the document the quote is in, so a warning can be read in place."""
+    wanted = _plain(quote.replace("*", "").replace("_", ""))
+    if not wanted:
+        return None
+    for line in document.splitlines():
+        bare = _bare(line)
+        if wanted not in _plain(bare.replace("_", "")):
+            continue
+        for sentence in SENTENCE_END.split(bare):
+            if wanted in _plain(sentence.replace("_", "")):
+                return sentence if len(sentence) <= SENTENCE_LIMIT else sentence[: SENTENCE_LIMIT - 1] + "…"
+        return bare[: SENTENCE_LIMIT - 1] + "…" if len(bare) > SENTENCE_LIMIT else bare
+    return None
+
+
+def with_sentences(document: str, warnings: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return [{**w, "sentence": w.get("sentence") or sentence_of(document, w["quote"])} for w in warnings]
+
+
+def feedback_facts(revision: dict[str, Any] | None) -> dict[str, Any]:
+    """
+    What the person told apply while reviewing, as profile facts: their corrections and notes. A rewrite is
+    written from them, and its check counts them as backed (they are the person's own word).
+    """
+    if not revision:
+        return {}
+    facts: dict[str, Any] = {}
+    corrections = [
+        {"wrong": c["quote"], "in": c.get("sentence") or "", "true": c.get("correction") or "(take it out)"}
+        for c in revision.get("corrections") or []
+    ]
+    if corrections:
+        facts["corrections_from_you"] = corrections
+    if (revision.get("notes") or "").strip():
+        facts["notes_from_you"] = revision["notes"].strip()
+    return facts
 
 
 def verified(document: str, claims: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -96,13 +150,16 @@ def verified(document: str, claims: list[dict[str, Any]]) -> list[dict[str, Any]
 
 def merge(previous: list[dict[str, Any]], fresh: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """Fresh warnings, de-duplicated, keeping what the person already decided about the same words."""
-    decided = {w["id"]: w.get("resolved") for w in previous if w.get("resolved")}
+    decided = {w["id"]: w for w in previous if w.get("resolved")}
     out: dict[str, dict[str, Any]] = {}
     for warning in fresh:
         wid = _id(warning["kind"] if warning["kind"] != "number" else "number", warning["quote"])
         if wid in out:
             continue
-        out[wid] = {**warning, "id": wid, "resolved": decided.get(wid)}
+        before = decided.get(wid, {})
+        out[wid] = {**warning, "id": wid, "resolved": before.get("resolved")}
+        if before.get("resolved") == "wrong":
+            out[wid]["correction"] = before.get("correction") or ""
     return list(out.values())
 
 
@@ -130,9 +187,10 @@ async def check(rt: Runtime, ctx: JobContext) -> None:
         if profile is None:
             doc.claims_status = "skipped"
             return
-        person = {"name": profile.name, "summary": profile.summary, **profile.attributes}
+        attributes = {**profile.attributes, **feedback_facts(doc.revision)}
+        person = {"name": profile.name, "summary": profile.summary, **attributes}
         prompt = pack.claims_prompt(
-            content, ProfileInput(name=profile.name, summary=profile.summary, attributes=profile.attributes)
+            content, ProfileInput(name=profile.name, summary=profile.summary, attributes=attributes)
         )
 
     warnings = rule_warnings(content, person)
@@ -148,7 +206,7 @@ async def check(rt: Runtime, ctx: JobContext) -> None:
         doc = await documents_repo.get_any_owner(session, document_id, for_update=True)
         if doc is None or doc.content_markdown != content:
             return  # edited meanwhile: that version gets its own check
-        doc.claim_warnings = merge(previous, warnings)
+        doc.claim_warnings = merge(previous, with_sentences(content, warnings))
         doc.claims_status = status
         doc.claims_checked_at = datetime.now(UTC)
 

@@ -23,6 +23,7 @@ alone: every state also has text or an icon.
 | links on cards; a switch's track when on (cards) | `primary` on `card` | 4.5:1 | 5.63:1 pass | 8.37:1 pass |
 | error text | `destructive` on `background` | 4.5:1 | 5.27:1 pass | 6.14:1 pass |
 | error text on cards | `destructive` on `card` | 4.5:1 | 5.57:1 pass | 5.70:1 pass |
+| the underline marking a warning's words in their sentence | `destructive` on `muted` | 3:1 | 4.64:1 pass | 5.05:1 pass |
 | success text | `success` on `background` | 4.5:1 | 5.84:1 pass | 9.91:1 pass |
 | success text on cards | `success` on `card` | 4.5:1 | 6.17:1 pass | 9.19:1 pass |
 | field borders; a switch's track when off; the extension's theme control | `input` on `background` | 3:1 | 3.71:1 pass | 4.09:1 pass |

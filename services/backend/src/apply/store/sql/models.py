@@ -364,6 +364,9 @@ class ApplicationDocument(Row, Base):
     claims_status: Mapped[str] = mapped_column(String(10), default="pending", server_default="pending")
     claims_checked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # A rewrite's brief: the version it comes from, the person's notes and corrections (kept, so later rewrites
+    # and the check of what was written know them).
+    revision: Mapped[dict[str, Any] | None] = mapped_column(JSONB)
 
 
 # ─── discovery ───────────────────────────────────────────────────────────────
@@ -455,7 +458,7 @@ class RenderedFile(Row, Base):
     document_id: Mapped[str] = mapped_column(
         String(26), ForeignKey("application_documents.id", ondelete="CASCADE"), index=True
     )
-    kind: Mapped[str] = mapped_column(String(10))  # pdf, html
+    kind: Mapped[str] = mapped_column(String(10))  # pdf, html, docx
     sha256: Mapped[str] = mapped_column(String(64))  # of what it was made from: the words and the template
     size: Mapped[int] = mapped_column(Integer)
     object_key: Mapped[str | None] = mapped_column(String(300))

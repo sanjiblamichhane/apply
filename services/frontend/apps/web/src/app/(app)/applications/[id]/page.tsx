@@ -4,10 +4,10 @@ import { isApiError } from "@apply/api";
 import { forPack } from "@apply/i18n";
 import { useI18n } from "@apply/i18n/react";
 import { ErrorNotice } from "@apply/kit";
-import { Button, Label, Textarea } from "@apply/ui";
+import { Button, Label, Tabs, TabsContent, TabsList, TabsTrigger, Textarea } from "@apply/ui";
 import { ArrowLeft, ExternalLink, X } from "@apply/ui/icons";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams, useParams } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -19,9 +19,25 @@ import { StageMenu } from "@/components/stage-menu";
 import { boardStages } from "@/lib/board";
 import { useApplication, useHistory, useOpportunity, usePack, useUpdateApplication } from "@/lib/queries";
 
+/** The application's parts, one at a time, so none is a long scroll below the others. */
+const TABS = ["documents", "kit", "details", "notes"] as const;
+type Tab = (typeof TABS)[number];
+
+/** The tab in the address (?tab=kit), so a reload, a link and Back keep it; Documents when there's none. */
+function useTab(): [Tab, (tab: Tab) => void] {
+  const params = useSearchParams();
+  const router = useRouter();
+  const path = usePathname();
+  const asked = params.get("tab");
+  const tab = (TABS as readonly string[]).includes(asked ?? "") ? (asked as Tab) : "documents";
+  const choose = (next: Tab) => router.replace(next === "documents" ? path : `${path}?tab=${next}`, { scroll: false });
+  return [tab, choose];
+}
+
 export default function ApplicationPage() {
   const { id } = useParams<{ id: string }>();
   const { t, error } = useI18n();
+  const [tab, setTab] = useTab();
   const application = useApplication(id);
   const opportunity = useOpportunity(application.data?.opportunity.id);
   const pack = usePack(application.data?.opportunity.pack ?? "job");
@@ -72,11 +88,26 @@ export default function ApplicationPage() {
         </div>
       </header>
 
-      <DocumentsPanel applicationId={app.id} pack={pack.data} title={title} />
-      <KitPanel applicationId={app.id} />
-      {opp ? <OpportunityPanel opportunity={opp} /> : null}
-      <History applicationId={app.id} stages={stages} />
-      <Notes applicationId={app.id} initial={app.notes} />
+      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+        {/* Stays in view while the tab's content scrolls under it. */}
+        <div className="sticky top-0 z-10 -mx-1 bg-background px-1 pb-2">
+          <TabsList aria-label={t("application.sections")} className="flex w-full flex-wrap">
+            <TabsTrigger value="documents" className="whitespace-normal">{t("documents.title")}</TabsTrigger>
+            <TabsTrigger value="kit" className="whitespace-normal">{t("kit.title")}</TabsTrigger>
+            <TabsTrigger value="details" className="whitespace-normal">{t(forPack("opportunity.details", app.opportunity.pack))}</TabsTrigger>
+            <TabsTrigger value="notes" className="whitespace-normal">{t("application.tab.notes")}</TabsTrigger>
+          </TabsList>
+        </div>
+        <TabsContent value="documents"><DocumentsPanel applicationId={app.id} pack={pack.data} title={title} /></TabsContent>
+        <TabsContent value="kit"><KitPanel applicationId={app.id} /></TabsContent>
+        <TabsContent value="details">
+          {opp ? <OpportunityPanel opportunity={opp} /> : <p role="status" className="text-sm text-muted-foreground">{t("state.loading")}</p>}
+        </TabsContent>
+        <TabsContent value="notes" className="space-y-6">
+          <Notes applicationId={app.id} initial={app.notes} />
+          <History applicationId={app.id} stages={stages} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

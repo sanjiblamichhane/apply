@@ -10,8 +10,9 @@ answers stay hidden until you press **Show**. The panel never touches the page, 
 needs no permission for it. It keeps your profiles in memory only, and they're gone when the browser closes.
 
 It's built so you rarely scroll. One row at the top holds the profile (a list with its own search) and every
-tool: search, refresh, Copy (the clipboard), Fill (the magic wand) and Settings, each named in a tooltip. The
-section tabs wrap rather than hide, the values add columns as the panel widens, and each job folds to one line.
+tool: search, refresh, Copy (the clipboard), Fill (the magic wand), apply (the web app, in a new tab) and
+Settings, each named in a tooltip. The section tabs wrap rather than hide, the values add columns as the
+panel widens, and each job folds to one line.
 `/` opens the search, and **Enter** copies the first match. The language, the theme (Match the system, Light or
 Dark), the clipboard setting and Disconnect are under **Settings** (the gear).
 

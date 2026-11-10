@@ -56,6 +56,16 @@ export function useMe() {
   return useQuery({ queryKey: keys.me, queryFn: () => call(api.GET("/api/v1/auth/me")), staleTime: 60_000 });
 }
 
+/** The apply this is (its API's version): shown so people can tell when theirs is behind a release. */
+export function useVersion() {
+  return useQuery({
+    queryKey: ["version"],
+    queryFn: () => call(api.GET("/api/v1/health")),
+    select: (health) => health.version,
+    staleTime: Infinity,
+  });
+}
+
 export function useSignIn() {
   const client = useQueryClient();
   return useMutation({

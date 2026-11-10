@@ -922,9 +922,30 @@ export interface paths {
         put?: never;
         /**
          * Resolve Warning
-         * @description "It's true" (kept), or open again.
+         * @description "It's true" (kept), "It's wrong" (with what's true instead, or empty to take it out), or open again.
          */
         post: operations["resolve_warning_api_v1_applications__application_id__documents__document_id__warnings__warning_id__post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/applications/{application_id}/documents/{document_id}/rewrite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Rewrite Document
+         * @description Write this document again from this version, with the corrections on its warnings and the notes. 202 with the
+         *     pending version; 409 NOTHING_TO_REWRITE with neither.
+         */
+        post: operations["rewrite_document_api_v1_applications__application_id__documents__document_id__rewrite_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -997,6 +1018,26 @@ export interface paths {
          * @description The version in its template, as the page (what's previewed). 409 RENDER_PENDING while it's made.
          */
         get: operations["document_html_api_v1_applications__application_id__documents__document_id__html_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/applications/{application_id}/documents/{document_id}/docx": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Document Docx
+         * @description The version as a Word file (.docx), to edit in a word processor. 409 RENDER_PENDING while it's made.
+         */
+        get: operations["document_docx_api_v1_applications__application_id__documents__document_id__docx_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -1240,7 +1281,7 @@ export interface paths {
         };
         /**
          * Current Token
-         * @description Who this is: the extension checks its token here, and speaks the owner's language.
+         * @description Who this is: the extension checks its token here, speaks the owner's language and links to the web app.
          */
         get: operations["current_token_api_v1_tokens_current_get"];
         put?: never;
@@ -1784,8 +1825,18 @@ export interface components {
             quote: string;
             /** Reason */
             reason: string;
+            /**
+             * Sentence
+             * @description The sentence the quote is in
+             */
+            sentence?: string | null;
             /** Resolved */
-            resolved?: "kept" | null;
+            resolved?: ("kept" | "wrong") | null;
+            /**
+             * Correction
+             * @description When wrong: what's true instead (empty: take it out)
+             */
+            correction?: string | null;
         };
         /** CopyGroupOut */
         CopyGroupOut: {
@@ -1926,7 +1977,7 @@ export interface components {
              * Source
              * @enum {string}
              */
-            source: "generated" | "uploaded" | "imported" | "edited";
+            source: "generated" | "uploaded" | "imported" | "edited" | "rewritten";
             /** Model */
             model: string | null;
             /** Generation Ms */
@@ -2010,7 +2061,7 @@ export interface components {
          * ErrorCode
          * @enum {string}
          */
-        ErrorCode: "INTERNAL" | "VALIDATION_FAILED" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "TOO_MANY_REQUESTS" | "DATABASE_NOT_READY" | "UNAUTHENTICATED" | "SIGN_IN_FAILED" | "SIGN_IN_LOCKED" | "ORIGIN_NOT_ALLOWED" | "OWNER_EXISTS" | "REGISTRATION_CLOSED" | "EMAIL_TAKEN" | "ACCOUNT_DISABLED" | "OWNER_ONLY" | "ACCOUNT_IS_OWNER" | "PASSWORD_TOO_SHORT" | "RESET_LINK_INVALID" | "MAIL_NOT_SET_UP" | "TOKEN_INVALID" | "TOKEN_NOT_ALLOWED" | "TOKEN_SCOPE_MISSING" | "TOKEN_NOT_FOUND" | "PACK_NOT_FOUND" | "DOCUMENT_TYPE_NOT_FOUND" | "DOCUMENT_TYPE_NOT_GENERATABLE" | "INVALID_ATTRIBUTES" | "PROFILE_NOT_FOUND" | "PROFILE_REQUIRED" | "PROFILE_PACK_MISMATCH" | "PROFILE_NOT_READ" | "UPLOAD_TOO_LARGE" | "UPLOAD_UNSUPPORTED" | "UPLOAD_NO_TEXT" | "TEMPLATE_PROBLEMS" | "STORAGE_UNAVAILABLE" | "OPPORTUNITY_NOT_FOUND" | "URL_OR_TEXT_REQUIRED" | "URL_NOT_ALLOWED" | "ADDRESS_NOT_ALLOWED" | "FETCH_FAILED" | "FETCH_BLOCKED" | "FETCH_NOT_HTML" | "FETCH_TOO_LARGE" | "FETCH_TOO_LITTLE_TEXT" | "FETCH_TOO_MANY_REDIRECTS" | "EXTRACT_FAILED" | "APPLICATION_NOT_FOUND" | "APPLICATION_EXISTS" | "STAGE_NOT_FOUND" | "DOCUMENT_NOT_FOUND" | "SOURCE_NOT_FOUND" | "SOURCE_KIND_NOT_FOUND" | "SOURCE_TOO_SOON" | "SOURCE_NOT_RECOGNISED" | "SOURCE_FAILED" | "SEARCH_NOT_FOUND" | "MATCH_NOT_FOUND" | "SCORE_CAP_REACHED" | "DOCUMENT_NOT_READY" | "WARNING_NOT_FOUND" | "RENDER_PENDING" | "ANSWER_NOT_FOUND" | "ANSWER_EXISTS" | "SUBMISSION_NOT_FOUND" | "UNDO_TOO_LATE" | "AUTO_RUN_NOT_FOUND" | "AUTO_ACTION_NOT_ALLOWED" | "RUNNER_TASK_NOT_FOUND" | "AUTO_PAUSED" | "AUTO_CAP_REACHED" | "AUTO_SAME_ISSUER" | "AUTO_CLOSED" | "AUTO_UNSUPPORTED_BOARD" | "AUTO_PROFILE_REQUIRED" | "AUTO_DOCUMENT_FAILED" | "AUTO_CLAIMS_UNCHECKED" | "AUTO_CLAIM_WARNINGS" | "AUTO_TIMED_OUT" | "AUTO_CAPTCHA" | "AUTO_SIGN_IN" | "AUTO_FORM_MISSING" | "AUTO_CONSENT_REQUIRED" | "AUTO_REQUIRED_UNANSWERED" | "AUTO_DRAFT_UNSUPPORTED" | "AUTO_DOCUMENTS_CHANGED" | "AUTO_FORM_CHANGED" | "AUTO_VALIDATION_ERROR" | "AUTO_NO_CONFIRMATION" | "AUTO_SEND_UNKNOWN" | "AUTO_RUNNER_FAILED" | "LLM_UNREACHABLE" | "LLM_TIMEOUT" | "LLM_BAD_REPLY" | "LLM_EMPTY_REPLY" | "LLM_MODEL_MISSING" | "MODEL_NOT_FOUND" | "MODEL_TEST_FAILED";
+        ErrorCode: "INTERNAL" | "VALIDATION_FAILED" | "NOT_FOUND" | "METHOD_NOT_ALLOWED" | "TOO_MANY_REQUESTS" | "DATABASE_NOT_READY" | "UNAUTHENTICATED" | "SIGN_IN_FAILED" | "SIGN_IN_LOCKED" | "ORIGIN_NOT_ALLOWED" | "OWNER_EXISTS" | "REGISTRATION_CLOSED" | "EMAIL_TAKEN" | "ACCOUNT_DISABLED" | "OWNER_ONLY" | "ACCOUNT_IS_OWNER" | "PASSWORD_TOO_SHORT" | "RESET_LINK_INVALID" | "MAIL_NOT_SET_UP" | "TOKEN_INVALID" | "TOKEN_NOT_ALLOWED" | "TOKEN_SCOPE_MISSING" | "TOKEN_NOT_FOUND" | "PACK_NOT_FOUND" | "DOCUMENT_TYPE_NOT_FOUND" | "DOCUMENT_TYPE_NOT_GENERATABLE" | "INVALID_ATTRIBUTES" | "PROFILE_NOT_FOUND" | "PROFILE_REQUIRED" | "PROFILE_PACK_MISMATCH" | "PROFILE_NOT_READ" | "UPLOAD_TOO_LARGE" | "UPLOAD_UNSUPPORTED" | "UPLOAD_NO_TEXT" | "TEMPLATE_PROBLEMS" | "STORAGE_UNAVAILABLE" | "OPPORTUNITY_NOT_FOUND" | "URL_OR_TEXT_REQUIRED" | "URL_NOT_ALLOWED" | "ADDRESS_NOT_ALLOWED" | "FETCH_FAILED" | "FETCH_BLOCKED" | "FETCH_NOT_HTML" | "FETCH_TOO_LARGE" | "FETCH_TOO_LITTLE_TEXT" | "FETCH_TOO_MANY_REDIRECTS" | "EXTRACT_FAILED" | "APPLICATION_NOT_FOUND" | "APPLICATION_EXISTS" | "STAGE_NOT_FOUND" | "DOCUMENT_NOT_FOUND" | "SOURCE_NOT_FOUND" | "SOURCE_KIND_NOT_FOUND" | "SOURCE_TOO_SOON" | "SOURCE_NOT_RECOGNISED" | "SOURCE_FAILED" | "SEARCH_NOT_FOUND" | "MATCH_NOT_FOUND" | "SCORE_CAP_REACHED" | "DOCUMENT_NOT_READY" | "WARNING_NOT_FOUND" | "NOTHING_TO_REWRITE" | "RENDER_PENDING" | "ANSWER_NOT_FOUND" | "ANSWER_EXISTS" | "SUBMISSION_NOT_FOUND" | "UNDO_TOO_LATE" | "AUTO_RUN_NOT_FOUND" | "AUTO_ACTION_NOT_ALLOWED" | "RUNNER_TASK_NOT_FOUND" | "AUTO_PAUSED" | "AUTO_CAP_REACHED" | "AUTO_SAME_ISSUER" | "AUTO_CLOSED" | "AUTO_UNSUPPORTED_BOARD" | "AUTO_PROFILE_REQUIRED" | "AUTO_DOCUMENT_FAILED" | "AUTO_CLAIMS_UNCHECKED" | "AUTO_CLAIM_WARNINGS" | "AUTO_TIMED_OUT" | "AUTO_CAPTCHA" | "AUTO_SIGN_IN" | "AUTO_FORM_MISSING" | "AUTO_CONSENT_REQUIRED" | "AUTO_REQUIRED_UNANSWERED" | "AUTO_DRAFT_UNSUPPORTED" | "AUTO_DOCUMENTS_CHANGED" | "AUTO_FORM_CHANGED" | "AUTO_VALIDATION_ERROR" | "AUTO_NO_CONFIRMATION" | "AUTO_SEND_UNKNOWN" | "AUTO_RUNNER_FAILED" | "LLM_UNREACHABLE" | "LLM_TIMEOUT" | "LLM_BAD_REPLY" | "LLM_EMPTY_REPLY" | "LLM_MODEL_MISSING" | "MODEL_NOT_FOUND" | "MODEL_TEST_FAILED";
         /** Extraction */
         Extraction: {
             /**
@@ -2907,6 +2958,15 @@ export interface components {
              */
             reviewed?: boolean;
         };
+        /** Rewrite */
+        Rewrite: {
+            /**
+             * Notes
+             * @description Anything else to change, in the person's words
+             * @default
+             */
+            notes?: string;
+        };
         /** SearchChanges */
         SearchChanges: {
             /** Name */
@@ -3218,7 +3278,13 @@ export interface components {
              * Resolution
              * @enum {string}
              */
-            resolution: "kept" | "open";
+            resolution: "kept" | "wrong" | "open";
+            /**
+             * Correction
+             * @description With wrong: what's true instead. Empty: take it out.
+             * @default
+             */
+            correction?: string;
         };
     };
     responses: never;
@@ -5986,6 +6052,60 @@ export interface operations {
             };
         };
     };
+    rewrite_document_api_v1_applications__application_id__documents__document_id__rewrite_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                application_id: string;
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["Rewrite"];
+            };
+        };
+        responses: {
+            /** @description One is already being written: that one */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentOut"];
+                };
+            };
+            /** @description Successful Response */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DocumentOut"];
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
     mark_reviewed_api_v1_applications__application_id__documents__document_id__review_post: {
         parameters: {
             query?: never;
@@ -6136,6 +6256,49 @@ export interface operations {
                 };
                 content: {
                     "text/html": unknown;
+                };
+            };
+            /** @description Client Error */
+            "4XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+            /** @description Server Error */
+            "5XX": {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/problem+json": components["schemas"]["Problem"];
+                };
+            };
+        };
+    };
+    document_docx_api_v1_applications__application_id__documents__document_id__docx_get: {
+        parameters: {
+            query?: {
+                download?: boolean;
+            };
+            header?: never;
+            path: {
+                application_id: string;
+                document_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The Word file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": unknown;
                 };
             };
             /** @description Client Error */

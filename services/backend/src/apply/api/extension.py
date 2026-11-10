@@ -43,10 +43,15 @@ async def revoke_token(token_id: str, rt: Rt, user: Owner) -> s.TokenOut:
 
 
 @extension.get("/tokens/current", tags=["tokens"])
-async def current_token(request: Request, user: AnyToken) -> s.Caller:
-    """Who this is: the extension checks its token here, and speaks the owner's language."""
+async def current_token(request: Request, rt: Rt, user: AnyToken) -> s.Caller:
+    """Who this is: the extension checks its token here, speaks the owner's language and links to the web app."""
     token = token_of(request)
-    return s.Caller(email=user.email, locale=user.locale, token=s.TokenOut.model_validate(token) if token else None)
+    return s.Caller(
+        email=user.email,
+        locale=user.locale,
+        token=s.TokenOut.model_validate(token) if token else None,
+        web_url=rt.settings.public_url.rstrip("/"),
+    )
 
 
 @extension.get("/applications/{application_id}/fill", tags=["applications"])

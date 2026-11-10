@@ -32,13 +32,26 @@ export function useResolveWarning(applicationId: string) {
   const client = useQueryClient();
   const refresh = useRefresh(applicationId);
   return useMutation({
-    mutationFn: ({ documentId, warningId, resolution }: { documentId: string; warningId: string; resolution: "kept" | "open" }) =>
+    mutationFn: ({ documentId, warningId, resolution, correction = "" }: {
+      documentId: string; warningId: string; resolution: "kept" | "wrong" | "open"; correction?: string;
+    }) =>
       call(api.POST("/api/v1/applications/{application_id}/documents/{document_id}/warnings/{warning_id}",
-        { params: { path: { ...doc(applicationId, documentId), warning_id: warningId } }, body: { resolution } })),
+        { params: { path: { ...doc(applicationId, documentId), warning_id: warningId } }, body: { resolution, correction } })),
     onSuccess: (updated: Document) => {
       client.setQueryData<Document[]>(keys.documents(applicationId), (list) => list?.map((d) => (d.id === updated.id ? updated : d)));
       refresh();
     },
+  });
+}
+
+/** Written again from a version, with the corrections on its warnings and the notes: a new pending version. */
+export function useRewrite(applicationId: string) {
+  const refresh = useRefresh(applicationId);
+  return useMutation({
+    mutationFn: ({ documentId, notes }: { documentId: string; notes: string }) =>
+      call(api.POST("/api/v1/applications/{application_id}/documents/{document_id}/rewrite",
+        { params: { path: doc(applicationId, documentId) }, body: { notes } })),
+    onSuccess: refresh,
   });
 }
 
@@ -66,7 +79,7 @@ export function useCheckAgain(applicationId: string) {
 }
 
 /** The version as a file (its page, its PDF), waiting while the worker makes it (RENDER_PENDING meanwhile). */
-export async function fetchFile(applicationId: string, documentId: string, kind: "pdf" | "html", tries = 60): Promise<Blob> {
+export async function fetchFile(applicationId: string, documentId: string, kind: "pdf" | "html" | "docx", tries = 60): Promise<Blob> {
   const url = `/api/v1/applications/${applicationId}/documents/${documentId}/${kind}`;
   for (let i = 0; i < tries; i++) {
     const response = await fetch(url, { credentials: "same-origin" });

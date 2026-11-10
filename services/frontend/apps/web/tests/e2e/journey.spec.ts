@@ -45,6 +45,7 @@ test("paste a job, get both documents, move it through the pipeline", async ({ p
     await page.getByRole("menuitemradio", { name: stage }).click();
     await expect(page.getByRole("button", { name: `Stage: ${stage}` })).toBeVisible();
   }
+  await page.getByRole("tab", { name: "Notes and history" }).click();
   const history = page.getByRole("region", { name: "History" });
   await expect(history.getByText("Entered Interview")).toBeVisible();
   await expect(history.getByText("Entered New")).toBeVisible();

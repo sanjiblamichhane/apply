@@ -22,6 +22,7 @@ logger = logging.getLogger("apply.files")
 
 PDF = "application/pdf"
 HTML = "text/html; charset=utf-8"
+DOCX = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 PNG = "image/png"
 SWEEP_AFTER = timedelta(hours=1)  # younger than this, a file without a row may be one whose row is being saved
 MOVE_BATCH = 50

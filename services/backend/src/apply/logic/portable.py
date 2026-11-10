@@ -94,13 +94,14 @@ class PortableDocument(_Item):
     version: int = Field(ge=1)
     is_active: bool = False
     content_markdown: str
-    source: Literal["generated", "uploaded", "imported"] = "imported"
+    source: Literal["generated", "uploaded", "imported", "edited", "rewritten"] = "imported"
     model: str | None = None
     profile_ref: str | None = None
     created_at: datetime | None = None
     claim_warnings: list[dict[str, Any]] = Field(default_factory=list)
     claims_status: str | None = None
     reviewed_at: datetime | None = None
+    revision: dict[str, Any] | None = None
 
 
 class PortableSubmission(_Item):
@@ -415,6 +416,7 @@ async def export(session: AsyncSession, owner_id: str) -> PortableExport:
                         claim_warnings=d.claim_warnings,
                         claims_status=d.claims_status,
                         reviewed_at=d.reviewed_at,
+                        revision=d.revision,
                     )
                     for d in documents
                     if d.application_id == a.id
@@ -721,6 +723,7 @@ async def _import_documents(
                 # Checked where it came from, or checked again here (an import from elsewhere wasn't).
                 claims_status=doc.claims_status if doc.claims_status in ("checked", "failed", "skipped") else "pending",
                 reviewed_at=doc.reviewed_at,
+                revision=doc.revision,
                 finished_at=doc.created_at or datetime.now(UTC),
                 **({"created_at": doc.created_at} if doc.created_at else {}),
             )

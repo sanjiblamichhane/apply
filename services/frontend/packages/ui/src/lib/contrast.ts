@@ -32,6 +32,7 @@ export const PAIRS: Pair[] = [
   { fg: "primary", bg: "card", min: 4.5, use: "links on cards; a switch's track when on (cards)" },
   { fg: "destructive", bg: "background", min: 4.5, use: "error text" },
   { fg: "destructive", bg: "card", min: 4.5, use: "error text on cards" },
+  { fg: "destructive", bg: "muted", min: 3, use: "the underline marking a warning's words in their sentence" },
   { fg: "success", bg: "background", min: 4.5, use: "success text" },
   { fg: "success", bg: "card", min: 4.5, use: "success text on cards" },
   { fg: "input", bg: "background", min: 3, use: "field borders; a switch's track when off; the extension's theme control" },

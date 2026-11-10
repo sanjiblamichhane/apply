@@ -16,13 +16,17 @@ The first public release.
 - **Packs:** jobs, public tenders, grants and freelance contracts, each with its own profile, opportunity
   details, documents, pipeline and saved questions. Screens are drawn from each pack's schema.
 - **Applications:** paste a link or a posting's text, or track a match. A board and a list, each application's
-  pipeline and history, and follow-ups. The application opens beside the board, each side scrolling on its own.
-  **Delete** removes one with its documents and history (its posting stays), with **Undo** instead of a
+  pipeline and history, and follow-ups. The application opens beside the board, as the wider side, each side
+  scrolling on its own, with its parts in tabs (documents, the kit, the details, notes and history). **Delete**
+  removes one with its documents and history (its posting stays), with **Undo** instead of a
   confirmation.
 - **Documents:** résumés, cover letters and each pack's own, written by your local model from your profile only.
   A claim check flags anything the profile doesn't back up (an invented employer, a number you never gave); fix
-  it or say "It's true", then mark the version reviewed. Edit, keep versions, and preview each one as it will be
-  downloaded: a tagged PDF/UA-1 in apply's own fonts, or the page itself (.html).
+  it, say "It's true", or say "It's wrong" and what's true instead; each warning shows the sentence it's in.
+  **Write it again with your changes** has your model write a new version from your corrections and notes, and
+  the check counts your corrections as your own facts. Then mark the version reviewed. Edit, keep versions,
+  and preview each one as it will be downloaded: a tagged PDF/UA-1 in apply's own fonts, or the page itself
+  (.html). Or download it as Word (.docx) to edit: the same headings, in Word's own styles.
 - **Document templates:** every document is made in your template, an HTML page with placeholders: one for
   résumés and documents in sections, one for letters. **Settings → Document templates** previews, downloads and
   uploads them. An upload is used only if it's safe (no scripts, nothing fetched) and, filled with a sample,
@@ -62,7 +66,7 @@ The first public release.
   Click a value to copy it: names in parts, the address line by line, dates in the forms forms ask for.
   Equal-opportunity answers stay hidden until you show them, and **Clear the clipboard a minute after copying**
   is an option.
-- A compact panel with every tool named in a tooltip, a profile picker with its own search, and its own
+- A compact panel with every tool named in a tooltip, a link that opens apply in a new tab, a profile picker with its own search, and its own
   Settings (language, clipboard, theme, Disconnect).
 - **Tokens:** the extension acts with a personal token made in Settings, which can only read your applications
   and profile, track new jobs and record submissions; revoke it at any time.

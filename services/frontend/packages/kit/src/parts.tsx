@@ -143,7 +143,7 @@ export function SplitView({ primary, detail, detailLabel }: {
   // left to scroll. The panes keep a little room inside for focus rings and the bar.
   const pane = "overscroll-contain px-1 xl:pe-3";
   return (
-    <div data-testid="split" className="grid min-h-0 gap-6 xl:h-[calc(100dvh-3rem)] xl:grid-cols-[minmax(0,1fr)_minmax(26rem,38%)]">
+    <div data-testid="split" className="grid min-h-0 gap-6 xl:h-[calc(100dvh-3rem)] xl:grid-cols-[minmax(0,1fr)_minmax(34rem,55%)]">
       <ScrollArea className="-mx-1 hidden min-h-0 min-w-0 xl:flex" viewportClassName={pane} viewportRef={markPrimaryPane}>
         {primary}
       </ScrollArea>

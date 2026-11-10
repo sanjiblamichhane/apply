@@ -28,7 +28,7 @@ export function PreviewDialog({ open, onOpenChange, title, description, children
           <DialogDescription id="preview-description">{description}</DialogDescription>
         </DialogHeader>
         {children}
-        {actions ? <DialogFooter className="gap-2">{actions}</DialogFooter> : null}
+        {actions ? <DialogFooter className="flex-wrap gap-2">{actions}</DialogFooter> : null}
       </DialogContent>
     </Dialog>
   );

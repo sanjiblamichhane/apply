@@ -8,6 +8,7 @@ Sans Devanagari for Nepali (OFL, embedded).
 
     page = render_html(markdown, kind="sections", template=default_template("sections"), title=…, description=…)
     pdf = render_pdf(page)
+    word = render_word(markdown, kind="sections", title=…, description=…)   # .docx, in Word's own styles
     problems = check_template(uploaded_html, "letter")   # [] when it may be kept
 """
 
@@ -34,6 +35,7 @@ __all__ = [
     "parts",
     "render_html",
     "render_pdf",
+    "render_word",
     "sample",
     "spans",
     "with_letterhead",
@@ -213,6 +215,21 @@ def render_html(
 ) -> bytes:
     """The template filled in with the document."""
     return fill(template, parts(markdown, kind), title=title, description=description, lang=lang).encode()
+
+
+def render_word(
+    markdown: str,
+    *,
+    kind: Kind = "sections",
+    title: str,
+    description: str,
+    lang: str = "en",
+    paper: Literal["a4", "us-letter"] = "us-letter",
+) -> bytes:
+    """The document as a .docx to edit in a word processor: the same parts, in Word's own styles."""
+    from .word import render_docx
+
+    return render_docx(parts(markdown, kind), title=title, description=description, lang=lang, paper=paper)
 
 
 def check_template(template: str, kind: Kind) -> list[Problem]:

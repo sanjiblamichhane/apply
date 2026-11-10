@@ -288,6 +288,21 @@ test("Copy: the profile beside any page; a click puts a value on the clipboard, 
   for (const name of ["Basics", "Experience", "More", "Answers"]) await expect(panel.getByRole("tab", { name })).toBeVisible();
   // One row at the top: the profile, then every tool as a named icon.
   for (const name of ["Search your profile", "Refresh", "Settings"]) await expect(panel.getByRole("button", { name })).toBeVisible();
+  // apply itself, a link to the web app that opens in a new tab.
+  const openApply = panel.getByRole("link", { name: "Open apply in a new tab" });
+  await expect(openApply).toHaveAttribute("href", "http://localhost:3310");
+  await expect(openApply).toHaveAttribute("target", "_blank");
+  // A connection saved without the web app's address (as before apply sent it) gets it when the panel opens.
+  await panel.evaluate(async () => {
+    const { connection } = await chrome.storage.local.get("connection");
+    await chrome.storage.local.set({ connection: { ...(connection as object), webUrl: null } });
+  });
+  await panel.reload();
+  await expect(openApply).toHaveAttribute("href", "http://localhost:3310");
+  await openApply.hover();
+  await expect(panel.getByRole("tooltip", { name: "Open apply in a new tab" })).toBeVisible();
+  await panel.mouse.move(0, 400);
+  await panel.mouse.move(0, 600, { steps: 4 });
   // Each icon names itself in a tooltip on hover (the browser's side panel doesn't show native title tooltips).
   for (const [role, name] of [["button", "Refresh"], ["tab", "Fill"], ["button", "Settings"]] as const) {
     await panel.getByRole(role, { name, exact: true }).hover();

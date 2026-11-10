@@ -62,7 +62,8 @@ demo to your own account on purpose.
    for other kinds of roles.
 2. **Applications.** Paste a link to a job, or its text. apply reads it and puts it on the board.
 3. On the application, **Write it** for the resume and the cover letter. Your model writes them in the
-   background. A claim check then flags anything your profile doesn't say. Fix it, or say "It's true".
+   background. A claim check then flags anything your profile doesn't say, in its sentence. Say "It's true",
+   or "It's wrong" and what's true instead, then **Write it again with your changes**.
    **Preview** shows it in your template, as it will be downloaded: **Download PDF**, or the page itself.
    To change how your documents look, go to **Settings → Document templates**. Download a template,
    change its HTML and CSS, and upload it. It's checked first: it must be safe and pass WCAG 2.2 AA.

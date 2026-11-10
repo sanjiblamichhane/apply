@@ -17,7 +17,7 @@ export default function ApplicationsLayout({ children }: { children: ReactNode }
   return (
     <SplitView
       primary={<Suspense><ApplicationsIndex beside={Boolean(selected)} /></Suspense>}
-      detail={selected ? children : null}
+      detail={selected ? <Suspense>{children}</Suspense> : null}
       detailLabel={t(forPack("opportunity.details", currentPack))}
     />
   );

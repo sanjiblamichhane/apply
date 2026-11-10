@@ -25,6 +25,10 @@ test("a wrong password is said, in words", async ({ page }) => {
 
 test("signing out ends the session", async ({ page }) => {
   await signIn(page);
+  // Above it, the apply this is, linking to the releases so people can tell when to update.
+  const version = page.getByRole("link", { name: /^Version \d+\.\d+\.\d+ ?, what's new, in a new tab$/ });
+  await expect(version).toHaveAttribute("href", "https://github.com/sanjiblamichhane/apply/releases");
+  await expect(version).toHaveAttribute("target", "_blank");
   await page.getByRole("button", { name: "Sign out" }).click();
   await expect(page).toHaveURL(/\/sign-in/);
   await page.goto("/applications");

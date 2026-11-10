@@ -3,9 +3,9 @@
 import { type Document, isApiError, type Pack } from "@apply/api";
 import { useI18n } from "@apply/i18n/react";
 import { ErrorNotice } from "@apply/kit";
-import { Button, Label, ScrollArea, Textarea } from "@apply/ui";
+import { Button, Input, Label, ScrollArea, Textarea } from "@apply/ui";
 import { CheckmarkFilled, Copy, Download, Edit, InProgress, Renew, View, WarningAlt } from "@apply/ui/icons";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Help } from "./help";
@@ -13,7 +13,7 @@ import { SafeMarkdown } from "@/components/safe-markdown";
 import { documentState, downloadName, versions } from "@/lib/documents";
 import { useDocuments, useWriteDocument } from "@/lib/queries";
 import { PagePreview, PreviewDialog } from "@/components/page-preview";
-import { fetchFile, save, useCheckAgain, useEditDocument, useMarkReviewed, useResolveWarning } from "@/lib/review";
+import { fetchFile, save, useCheckAgain, useEditDocument, useMarkReviewed, useResolveWarning, useRewrite } from "@/lib/review";
 
 /** The documents for one application: one block per kind the model can write. */
 export function DocumentsPanel({ applicationId, pack, title }: { applicationId: string; pack: Pack; title: string }) {
@@ -68,7 +68,12 @@ function DocumentBlock({ applicationId, type, label, documents, loading, title }
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 id={`doc-${type}`} className="font-semibold">
           {name}
-          {current ? <span className="ms-2 text-sm font-normal text-muted-foreground">{t("documents.version", { version: current.version })}</span> : null}
+          {current ? (
+            <span className="ms-2 text-sm font-normal text-muted-foreground">
+              {t("documents.version", { version: current.version })}
+              {current.source === "edited" || current.source === "rewritten" ? ` · ${t(`review.source.${current.source}`)}` : null}
+            </span>
+          ) : null}
         </h3>
         {!loading && state.kind !== "pending" ? (
           <Button size="sm" variant={current ? "outline" : "default"} className="gap-2" onClick={start} disabled={write.isPending}>
@@ -97,6 +102,7 @@ function DocumentBlock({ applicationId, type, label, documents, loading, title }
       {current ? (
         <div className="space-y-3">
           <Claims applicationId={applicationId} document={current} />
+          {!editing && state.kind !== "pending" ? <Rewrite applicationId={applicationId} document={current} name={name} /> : null}
           {editing ? (
             <Editor applicationId={applicationId} document={current} onDone={() => setEditing(false)} />
           ) : (
@@ -141,7 +147,12 @@ function DocumentBlock({ applicationId, type, label, documents, loading, title }
 }
 
 
-/** What the profile doesn't back up, quoted, with a decision for each: fix it (edit), or "It's true". */
+type Warning = Document["claim_warnings"][number];
+
+/**
+ * What the profile doesn't back up, in its sentence, with a decision for each: "It's true", or "It's wrong" and
+ * what's true instead (a marker left to fill in: what it should say). The corrections go into a rewrite.
+ */
 function Claims({ applicationId, document: doc }: { applicationId: string; document: Document }) {
   const { t, error } = useI18n();
   const resolve = useResolveWarning(applicationId);
@@ -170,29 +181,146 @@ function Claims({ applicationId, document: doc }: { applicationId: string; docum
           </h4>
           <ul className="divide-y">
             {doc.claim_warnings.map((w) => (
-              <li key={w.id} className="flex flex-wrap items-start gap-3 py-2">
-                <div className="min-w-0 flex-1 space-y-1">
-                  <p className="text-xs font-medium text-muted-foreground">{t(`review.kind.${w.kind}`)}</p>
-                  <p lang="en" className="text-sm"><mark className="rounded bg-muted px-1 text-foreground">{w.quote}</mark></p>
-                  <p lang="en" className="text-sm text-muted-foreground">{w.reason}</p>
-                </div>
-                {w.resolved === "kept" ? (
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center gap-1 text-sm text-success"><CheckmarkFilled className="size-4" aria-hidden />{t("review.kept")}</span>
-                    <Button size="sm" variant="ghost" onClick={() => resolve.mutate({ documentId: doc.id, warningId: w.id, resolution: "open" })}>{t("review.reopen")}</Button>
-                  </div>
-                ) : w.kind !== "confirm" ? (
-                  <Button size="sm" variant="outline" onClick={() => resolve.mutate({ documentId: doc.id, warningId: w.id, resolution: "kept" })}>
-                    {t("review.keep")}<span className="sr-only">: {w.quote}</span>
-                  </Button>
-                ) : null}
-              </li>
+              <ClaimItem key={w.id} warning={w} busy={resolve.isPending}
+                onResolve={(resolution, correction) => resolve.mutate({ documentId: doc.id, warningId: w.id, resolution, correction })} />
             ))}
           </ul>
         </div>
       ) : null}
       {resolve.error ? <ErrorNotice message={error(isApiError(resolve.error) ? resolve.error.code : "INTERNAL")} /> : null}
     </div>
+  );
+}
+
+function ClaimItem({ warning: w, busy, onResolve }: {
+  warning: Warning; busy: boolean; onResolve: (resolution: "kept" | "wrong" | "open", correction?: string) => void;
+}) {
+  const { t } = useI18n();
+  const [correcting, setCorrecting] = useState(false);
+  const [text, setText] = useState(w.correction ?? "");
+  const marker = w.kind === "confirm";
+  const id = `correction-${w.id}`;
+  // The field takes focus when the person opens it; Cancel puts focus back on the button that opened it.
+  const field = useRef<HTMLInputElement>(null);
+  const opener = useRef<HTMLButtonElement>(null);
+  const opened = useRef(false);
+  useEffect(() => {
+    if (correcting) field.current?.focus();
+    else if (opened.current) opener.current?.focus();
+    opened.current = correcting;
+  }, [correcting]);
+  // After a decision, the buttons change: focus goes to the first of the new ones, not back to the page.
+  const item = useRef<HTMLLIElement>(null);
+  const decided = useRef(false);
+  const decide = (resolution: "kept" | "wrong" | "open", correction?: string) => {
+    decided.current = true;
+    onResolve(resolution, correction);
+  };
+  useEffect(() => {
+    if (!decided.current) return;
+    decided.current = false;
+    item.current?.querySelector<HTMLButtonElement>("button")?.focus();
+  }, [w.resolved, w.correction]);
+  return (
+    <li ref={item} className="space-y-2 py-2">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="min-w-0 flex-1 space-y-1">
+          <p className="text-xs font-medium text-muted-foreground">{t(`review.kind.${w.kind}`)}</p>
+          <p lang="en" className="text-sm"><InSentence sentence={w.sentence} quote={w.quote} /></p>
+          <p lang="en" className="text-sm text-muted-foreground">{w.reason}</p>
+        </div>
+        {w.resolved ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="flex items-center gap-1 text-sm text-success">
+              <CheckmarkFilled className="size-4 shrink-0" aria-hidden />
+              {w.resolved === "kept" ? t("review.kept")
+                : !w.correction ? t("review.take_out_said")
+                : t(marker ? "review.filled_said" : "review.wrong_said", { correction: w.correction })}
+            </span>
+            <Button size="sm" variant="ghost" disabled={busy} onClick={() => { setText(w.correction ?? ""); decide("open"); }}>
+              {t("review.reopen")}<span className="sr-only">: {w.quote}</span>
+            </Button>
+          </div>
+        ) : !correcting ? (
+          <div className="flex flex-wrap gap-2">
+            {!marker ? (
+              <Button size="sm" variant="outline" disabled={busy} onClick={() => decide("kept")}>
+                {t("review.keep")}<span className="sr-only">: {w.quote}</span>
+              </Button>
+            ) : null}
+            <Button ref={opener} size="sm" variant="outline" disabled={busy} onClick={() => setCorrecting(true)}>
+              {t(marker ? "review.fill_in" : "review.wrong")}<span className="sr-only">: {w.quote}</span>
+            </Button>
+          </div>
+        ) : null}
+      </div>
+      {correcting && !w.resolved ? (
+        <form className="space-y-2" onSubmit={(e) => {
+          e.preventDefault();
+          opened.current = false; // the decision moves focus, not Cancel's rule
+          decide("wrong", text.trim());
+          setCorrecting(false);
+        }}>
+          <Label htmlFor={id}>{t(marker ? "review.fill_label" : "review.correction_label")}</Label>
+          <p id={`${id}-hint`} className="text-sm text-muted-foreground">{t("review.correction_hint")}</p>
+          <Input ref={field} id={id} lang="en" maxLength={500} value={text} onChange={(e) => setText(e.target.value)}
+            aria-describedby={`${id}-hint`} />
+          <div className="flex gap-2">
+            <Button type="submit" size="sm" disabled={busy}>{t("action.save")}</Button>
+            <Button type="button" size="sm" variant="outline" onClick={() => setCorrecting(false)}>{t("action.cancel")}</Button>
+          </div>
+        </form>
+      ) : null}
+    </li>
+  );
+}
+
+/** The sentence a warning is in, its words marked; the words alone for a warning checked before sentences. */
+function InSentence({ sentence, quote }: { sentence?: string | null; quote: string }) {
+  const at = sentence ? sentence.toLowerCase().indexOf(quote.toLowerCase()) : -1;
+  const mark = (words: string) => <mark className="rounded bg-muted px-1 font-medium text-foreground underline decoration-destructive decoration-2 underline-offset-2">{words}</mark>;
+  if (!sentence || at < 0) return mark(quote);
+  return <>{sentence.slice(0, at)}{mark(sentence.slice(at, at + quote.length))}{sentence.slice(at + quote.length)}</>;
+}
+
+/**
+ * Write it again with the person's changes: their corrections on the warnings, and anything else they say. Open
+ * while there are corrections; a disclosure otherwise.
+ */
+function Rewrite({ applicationId, document: doc, name }: { applicationId: string; document: Document; name: string }) {
+  const { t, error } = useI18n();
+  const rewrite = useRewrite(applicationId);
+  const corrections = doc.claim_warnings.filter((w) => w.resolved === "wrong").length;
+  const [asked, setAsked] = useState(false);
+  const [notes, setNotes] = useState("");
+  const id = `rewrite-${doc.id}`;
+  if (corrections === 0 && !asked) {
+    return (
+      <Button size="sm" variant="ghost" className="gap-2" onClick={() => setAsked(true)}>
+        <Edit aria-hidden />{t("review.rewrite_open")}<span className="sr-only">: {name}</span>
+      </Button>
+    );
+  }
+  return (
+    <form aria-labelledby={`${id}-title`} className="space-y-2 rounded-lg border p-3" onSubmit={(e) => {
+      e.preventDefault();
+      rewrite.mutate({ documentId: doc.id, notes: notes.trim() }, { onSuccess: () => { setNotes(""); setAsked(false); } });
+    }}>
+      <h4 id={`${id}-title`} className="text-sm font-semibold">{t("review.rewrite_title")}</h4>
+      <p id={`${id}-hint`} className="text-sm text-muted-foreground">
+        {t(corrections > 0 ? "review.rewrite_hint_corrections" : "review.rewrite_hint")}
+      </p>
+      <Label htmlFor={id}>{t("review.rewrite_notes")}</Label>
+      <Textarea id={id} lang="en" rows={3} maxLength={2000} value={notes} onChange={(e) => setNotes(e.target.value)}
+        aria-describedby={`${id}-hint`} />
+      {rewrite.error ? <ErrorNotice message={error(isApiError(rewrite.error) ? rewrite.error.code : "INTERNAL")} /> : null}
+      <div className="flex gap-2">
+        <Button type="submit" size="sm" className="gap-2" disabled={rewrite.isPending || (corrections === 0 && !notes.trim())}>
+          <Renew aria-hidden />{t("review.rewrite")}<span className="sr-only">: {name}</span>
+        </Button>
+        {corrections === 0 ? <Button type="button" size="sm" variant="outline" onClick={() => setAsked(false)}>{t("action.cancel")}</Button> : null}
+      </div>
+    </form>
   );
 }
 
@@ -234,7 +362,7 @@ function PreviewButton({ applicationId, document: doc, name, filename }: {
   const { t, error } = useI18n();
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState<string | null>(null);
-  const [busy, setBusy] = useState<"" | "pdf" | "html">("");
+  const [busy, setBusy] = useState<"" | "pdf" | "html" | "docx">("");
   const title = `${name}, ${t("documents.version", { version: doc.version })}`;
 
   async function show() {
@@ -248,7 +376,7 @@ function PreviewButton({ applicationId, document: doc, name, filename }: {
     }
   }
 
-  async function download(kind: "pdf" | "html") {
+  async function download(kind: "pdf" | "html" | "docx") {
     setBusy(kind);
     try {
       save(await fetchFile(applicationId, doc.id, kind), `${filename}.${kind}`);
@@ -267,9 +395,14 @@ function PreviewButton({ applicationId, document: doc, name, filename }: {
       <PreviewDialog open={open} onOpenChange={setOpen} title={title} description={t("documents.preview_hint")}
         actions={page !== null ? (
           <>
+            <Button variant="outline" className="gap-2" onClick={() => download("docx")} disabled={busy !== ""}
+              aria-describedby={`word-hint-${doc.id}`}>
+              <Download aria-hidden />{busy === "docx" ? t("documents.word_making") : t("documents.download_word")}
+            </Button>
             <Button variant="outline" className="gap-2" onClick={() => download("html")} disabled={busy !== ""}>
               <Download aria-hidden />{t("documents.download_html")}
             </Button>
+            <p id={`word-hint-${doc.id}`} className="basis-full text-sm text-muted-foreground">{t("documents.word_hint")}</p>
             <Button className="gap-2" onClick={() => download("pdf")} disabled={busy !== ""}>
               <Download aria-hidden />{busy === "pdf" ? t("review.pdf_making") : t("documents.download_pdf")}
             </Button>

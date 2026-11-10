@@ -5,10 +5,11 @@ title: Documents
 Each document is written by your model from your profile and the details, in the background; you can leave the page while it works.
 
 - **Nothing invented.** Documents may say only what your profile says. Anything missing is written as **[CONFIRM: …]** for you to fill in.
-- **The claim check** reads each new version and flags what your profile doesn't back up: an employer, a number, a skill. Fix the text, or choose **It's true** if it is. A warning you've decided stays decided in later versions.
+- **The claim check** reads each new version and flags what your profile doesn't back up: an employer, a number, a skill. Each warning shows the sentence it's in. Choose **It's true** if it is, or **It's wrong** and type what's true instead (leave it empty to take it out). For a **[CONFIRM: …]**, **Fill it in**. "It's true" stays decided in later versions.
+- **Write it again with your changes** sends your corrections, and anything else you'd like changed, to your model with the version you read. It writes a new version and keeps this one. Your corrections count as your own facts, so the check doesn't flag them again.
 - **Write again** makes a new version; the one in use stays until the new one is ready. Older versions are under **Versions**.
 - **Edit** saves your own version, which is checked too. **Reviewed** marks the version you've read through.
-- **Preview** shows the version in use as it will be downloaded, in your template. **Download PDF** prints that page to a tagged, accessible PDF. **Download web page (.html)** saves the page itself.
+- **Preview** shows the version in use as it will be downloaded, in your template. **Download PDF** prints that page to a tagged, accessible PDF. **Download web page (.html)** saves the page itself. **Download Word (.docx)** gives you a file to edit in Word or any word processor: the same words and headings, in Word's own styles rather than your template.
 
 ### Your templates
 

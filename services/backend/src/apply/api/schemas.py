@@ -466,7 +466,9 @@ class ClaimWarning(BaseModel):
     kind: Literal["confirm", "number", "unsupported"]
     quote: str
     reason: str
-    resolved: Literal["kept"] | None = None
+    sentence: str | None = Field(default=None, description="The sentence the quote is in")
+    resolved: Literal["kept", "wrong"] | None = None
+    correction: str | None = Field(default=None, description="When wrong: what's true instead (empty: take it out)")
 
 
 class DocumentOut(ApiModel):
@@ -482,7 +484,7 @@ class DocumentOut(ApiModel):
     claims_status: Literal["pending", "checked", "failed", "skipped"]
     claims_checked_at: datetime | None
     reviewed_at: datetime | None
-    source: Literal["generated", "uploaded", "imported", "edited"]
+    source: Literal["generated", "uploaded", "imported", "edited", "rewritten"]
     model: str | None
     generation_ms: int | None
     profile_id: str | None
@@ -749,7 +751,16 @@ class DocumentContent(In):
 
 
 class WarningResolution(In):
-    resolution: Literal["kept", "open"]
+    resolution: Literal["kept", "wrong", "open"]
+    correction: Annotated[str, StringConstraints(max_length=500)] = Field(
+        default="", description="With wrong: what's true instead. Empty: take it out."
+    )
+
+
+class Rewrite(In):
+    notes: Annotated[str, StringConstraints(max_length=2000)] = Field(
+        default="", description="Anything else to change, in the person's words"
+    )
 
 
 class Reviewed(In):

@@ -139,7 +139,7 @@ const TOUR = `<style>${BASE}
   #cursor { position: absolute; left: 0; top: 0; width: 30px; height: 30px; z-index: 5; transform-origin: 3px 3px;
             filter: drop-shadow(0 2px 3px rgb(0 0 0 / .35)); }
   #ring { position: absolute; z-index: 4; border-radius: 50%; border: 3px solid ${BRAND}; background: rgb(7 114 125 / .15); }
-  #end { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  #end { position: absolute; inset: 0; display: grid; place-content: center; justify-items: center;
          text-align: center; gap: 26px; opacity: 0; z-index: 6;
          background: radial-gradient(1200px 600px at 85% -10%, #c9f1f6 0%, transparent 60%), #f4f8fa; }
   #end .logo { height: 88px; }
@@ -267,18 +267,20 @@ function draw({ t, scenes, endLength, fade, link }) {
   return total + endLength;
 }
 
-const browser = await chromium.launch();
+const browser = await chromium.launch({ headless: true });
+/** Waits for the page's web fonts, so no frame shows a fallback font. */
+const settle = (p) => p.evaluate(async () => { await document.fonts.ready; });
 const work = process.env.KEEP_FRAMES ?? mkdtempSync(join(tmpdir(), "apply-media-"));
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 640 }, deviceScaleFactor: 2 });
   await page.setContent(SOCIAL, { waitUntil: "load" });
-  await page.evaluate(() => document.fonts.ready);
+  await settle(page);
   await page.screenshot({ path: join(images, "social-preview.png") });
   // deviceScaleFactor 2 gives 2560 × 1280; GitHub asks for at least 640 × 320 and shows it at 1280 × 640.
 
   const tour = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
   await tour.setContent(TOUR, { waitUntil: "load" });
-  await tour.evaluate(() => document.fonts.ready);
+  await settle(tour);
   const args = { scenes: SCENES, endLength: END_LENGTH, fade: FADE, link: LINK };
   const length = await tour.evaluate(draw, { ...args, t: 0 });
   const frames = Math.round(length * FPS);

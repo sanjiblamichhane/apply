@@ -9,7 +9,7 @@ import { adapterFor, boardHosts, type FillResult, type PreviewRow } from "@apply
 import { bestLocale, hasCatalogue, LANGUAGES, loadLocale, type Locale, LOCALES } from "@apply/i18n";
 import { I18nProvider, useI18n } from "@apply/i18n/react";
 import { Alert, AlertDescription, AlertTitle, Badge, Button, Input, Label, Logo } from "@apply/ui";
-import { ChevronLeft, Clipboard, MagicWand, Renew, Settings } from "@apply/ui/icons";
+import { ChevronLeft, Clipboard, ExternalLink, MagicWand, Renew, Settings } from "@apply/ui/icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ExtensionApi } from "../api";
@@ -22,7 +22,7 @@ import {
   type PageChanged, type ToContent,
 } from "../messages";
 import { allowSite, forgetSite, originOf } from "../sites";
-import { ClearSetting, CopyHelp, CopyView, Tip, Tool } from "./copy";
+import { ClearSetting, CopyHelp, CopyView, Tip, Tool, ToolLink } from "./copy";
 import { chooseTheme, savedTheme, type Theme, THEMES } from "../theme";
 import { FILLS, Preview } from "./preview";
 import { decide, filledSummary, toBase64, type Known } from "./state";
@@ -49,7 +49,19 @@ export function App() {
   const [connection, setConnection] = useState<Connection | null | undefined>(undefined);
   const [override, setOverride] = useState<Locale | null>(null);
   useEffect(() => {
-    void Promise.all([loadConnection(local), localeOverride(local)]).then(([c, l]) => { setConnection(c); setOverride(l); });
+    void Promise.all([loadConnection(local), localeOverride(local)]).then(([c, l]) => {
+      setConnection(c);
+      setOverride(l);
+      // The web app's address can change after connecting (or was missing before apply sent it): ask again, quietly.
+      if (!c) return;
+      void new ExtensionApi(c.apiUrl, c.token).whoami().then((caller) => {
+        const webUrl = caller.web_url ?? null;
+        if (webUrl === c.webUrl) return;
+        const updated = { ...c, webUrl };
+        setConnection(updated);
+        void saveConnection(local, updated);
+      }).catch(() => undefined);
+    });
   }, []);
   const wanted: Locale = override ?? connection?.locale ?? bestLocale(navigator.languages);
   // A language's strings load before it's shown (until then, the one before stays), so nothing flashes in English.
@@ -239,7 +251,7 @@ function Panel({ connection, locale, onLocale, onDisconnect }: {
       </div>
     );
   }
-  // Copy | Fill as icon tabs, then Settings: the end of the one row at the top (Copy puts its own tools first).
+  // Copy | Fill as icon tabs, then apply (a new tab) and Settings: the end of the one row at the top (Copy puts its own tools first).
   const actions = (
     <>
       <div role="tablist" aria-label={t("ext.views")} className="flex shrink-0 gap-0.5 border-s ps-1">
@@ -258,6 +270,11 @@ function Panel({ connection, locale, onLocale, onDisconnect }: {
           );
         })}
       </div>
+      {connection.webUrl && (
+        <ToolLink label={t("ext.open_apply")} href={connection.webUrl}>
+          <ExternalLink aria-hidden />
+        </ToolLink>
+      )}
       <Tool label={t("ext.settings")} onClick={() => setSettings(true)} ref={opener}>
         <Settings aria-hidden />
       </Tool>

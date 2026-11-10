@@ -178,7 +178,7 @@ class Storage:
 
 
 def document_file(owner_id: str, document_id: str, sha256: str, kind: str) -> str:
-    """A document version as a file: ``kind`` is its extension (pdf, html)."""
+    """A document version as a file: ``kind`` is its extension (pdf, html, docx)."""
     return f"owners/{owner_id}/documents/{document_id}/{sha256}.{kind}"
 
 

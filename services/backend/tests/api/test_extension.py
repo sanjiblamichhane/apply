@@ -89,13 +89,13 @@ async def test_a_token_is_shown_once_and_kept_as_a_hash(client, owner, rt):
     assert bad.status_code == 422
 
 
-async def test_a_token_reaches_only_what_its_scopes_allow(client, owner):
+async def test_a_token_reaches_only_what_its_scopes_allow(client, owner, rt):
     read_only = (await make_token(client, ["applications:read"]))["secret"]
     async with extension(client, read_only) as ext:
         me = await ext.get("/api/v1/tokens/current")
         assert me.status_code == 200 and me.json()["email"] == owner["email"]
         assert me.json()["token"]["scopes"] == ["applications:read"]
-        assert "web_url" in me.json()  # the first allowed origin (none in these tests)
+        assert me.json()["web_url"] == rt.settings.public_url.rstrip("/")  # the web app, from settings
         stages = (await ext.get("/api/v1/packs/job")).json()["pipeline"]["stages"]
         assert "in_progress" in [stage["code"] for stage in stages]
         assert (await ext.get(f"/api/v1/applications/by-url?url={POSTING_URL}")).json()["code"] == (

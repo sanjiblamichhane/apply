@@ -57,6 +57,8 @@ export const common = {
   "shell.expand": { en: "Expand the sidebar", ne: "साइडबार ठूलो पार्नुहोस्" },
   "shell.account": { en: "Account", ne: "खाता" },
   "shell.sign_out": { en: "Sign out", ne: "साइन आउट गर्नुहोस्" },
+  "shell.version": { en: "Version {version}", ne: "संस्करण {version}" },
+  "shell.version_hint": { en: "what's new, in a new tab", ne: "के नयाँ छ, नयाँ ट्याबमा" },
   "shell.language": { en: "Language", ne: "भाषा" },
   "shell.not_found": { en: "There's nothing here.", ne: "यहाँ केही छैन।" },
   "shell.not_found_body": {

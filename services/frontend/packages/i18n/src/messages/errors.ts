@@ -124,6 +124,10 @@ export const errors = {
   },
   DOCUMENT_NOT_READY: { en: "That document isn't written yet.", ne: "त्यो कागजात अहिलेसम्म लेखिएको छैन।" },
   WARNING_NOT_FOUND: { en: "That warning isn't on this version any more.", ne: "त्यो चेतावनी अब यो संस्करणमा छैन।" },
+  NOTHING_TO_REWRITE: {
+    en: "Mark a warning wrong, or say what to change, first.",
+    ne: "पहिले कुनै चेतावनी गलत भनी चिनो लगाउनुहोस्, वा के परिवर्तन गर्ने भन्नुहोस्।",
+  },
   RENDER_PENDING: { en: "The PDF is being made. Try again in a moment.", ne: "PDF बन्दैछ। एकछिनमा फेरि प्रयास गर्नुहोस्।" },
   ANSWER_NOT_FOUND: { en: "That answer isn't here any more.", ne: "त्यो जवाफ अब यहाँ छैन।" },
   ANSWER_EXISTS: { en: "There's already an answer with that short name.", ne: "त्यो छोटो नामको जवाफ पहिल्यै छ।" },

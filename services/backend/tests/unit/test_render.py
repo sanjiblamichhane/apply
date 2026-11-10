@@ -138,3 +138,77 @@ def test_printing_fetches_nothing():
     )
     pdf = render_pdf(render_html("# A", template=template, title="T", description=""))
     assert pdf.startswith(b"%PDF-")  # the image just isn't there; nothing was asked for
+
+
+# ── the Word file ──────────────────────────────────────────────────────────────
+
+
+def _word(markdown: str, kind: str = "sections", **kw):
+    import io
+
+    from docx import Document as read_docx
+
+    from apply.libs.render import render_word
+
+    return read_docx(io.BytesIO(render_word(markdown, kind=kind, title="Sam Rai - Resume", description="d", **kw)))
+
+
+def test_a_resume_in_word_has_the_pdfs_outline_in_words_own_styles():
+    doc = _word(
+        "# Sam Rai\n\nsam@example.com | [site](https://example.com)\n\n## Experience\n\n"
+        "### Engineer, Himal Tech\n\n- Built **APIs**\n- Mentored [CONFIRM: how many] juniors\n\n1. First\n2. Second\n"
+    )
+    styles = [(p.style.name, p.text) for p in doc.paragraphs]
+    assert styles == [
+        ("Heading 1", "Sam Rai"),
+        ("Normal", "sam@example.com | site"),
+        ("Heading 2", "Experience"),
+        ("Heading 3", "Engineer, Himal Tech"),
+        ("List Bullet", "Built APIs"),
+        ("List Bullet", "Mentored [CONFIRM: how many] juniors"),
+        ("List Number", "First"),
+        ("List Number", "Second"),
+    ]
+    assert doc.core_properties.title == "Sam Rai - Resume" and doc.core_properties.language == "en"
+    assert doc.core_properties.author == ""  # not the library's name, nor anyone's
+    assert [r.target_ref for r in doc.part.rels.values() if r.reltype.endswith("/hyperlink")] == ["https://example.com"]
+    bold = [r.text for p in doc.paragraphs for r in p.runs if r.bold]
+    assert bold == ["APIs"]
+    assert any(r.font.highlight_color for p in doc.paragraphs for r in p.runs if "[CONFIRM:" in r.text)
+    assert doc.styles["Normal"].font.name == "Arial"
+
+
+def test_a_letter_in_word_keeps_its_lines_and_the_paper_is_the_settings():
+    doc = _word(
+        "# Sam Rai\n\nsam@example.com\n\nNovember 9, 2026\n\nDear Hiring Manager,\n\nI'd like the role.\n\n"
+        "Sincerely,\nSam Rai\n",
+        kind="letter",
+        paper="a4",
+    )
+    texts = [p.text for p in doc.paragraphs]
+    assert texts[:4] == ["Sam Rai", "sam@example.com", "November 9, 2026", "Dear Hiring Manager,"]
+    assert texts[-1] == "Sincerely,\nSam Rai"
+    assert round(doc.sections[0].page_width.inches, 2) == 8.27
+
+
+def test_a_stray_control_character_doesnt_break_the_word_file():
+    doc = _word("# Sam\x07 Rai\n\n- Built\x0b APIs\n")
+    assert [p.text for p in doc.paragraphs] == ["Sam Rai", "Built APIs"]
+
+
+def test_the_word_files_colours_pass_aa_on_white():
+    from apply.libs.render.word import LINK, TEXT
+
+    def luminance(rgb) -> float:
+        def channel(c: int) -> float:
+            v = c / 255
+            return v / 12.92 if v <= 0.04045 else ((v + 0.055) / 1.055) ** 2.4
+
+        r, g, b = (channel(c) for c in rgb)
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+    def contrast(rgb) -> float:
+        return 1.05 / (luminance(rgb) + 0.05)
+
+    assert contrast(TEXT) >= 4.5 and contrast(LINK) >= 4.5
+    print(f"text {contrast(TEXT):.2f}:1, links {contrast(LINK):.2f}:1")

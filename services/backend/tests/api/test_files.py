@@ -61,7 +61,9 @@ async def test_files_nothing_points_at_are_swept_once_an_hour_old(client, owner,
 
     assert await files.sweep(rt) == 0  # too new: its row may still be on its way
     assert await files.sweep(rt, now=datetime.now(UTC) + timedelta(hours=2)) == 1
-    assert sorted(f.key for f in await rt.files.files("owners/")) == [kept.removesuffix(".pdf") + ".html", kept]
+    assert sorted(f.key for f in await rt.files.files("owners/")) == sorted(
+        kept.removesuffix(".pdf") + f".{k}" for k in ("docx", "html", "pdf")
+    )
 
 
 async def test_a_bucket_that_cant_be_reached_is_a_503_and_health_says_so(client, owner, model_server, worker, rt):

@@ -267,6 +267,18 @@ export const Tool = forwardRef<HTMLButtonElement, {
 ));
 Tool.displayName = "Tool";
 
+/** A tool in the top row that opens a page in a new tab: a link, so it behaves like one. */
+export function ToolLink({ label, href, children }: { label: string; href: string; children: ReactNode }) {
+  return (
+    <Tip label={label}>
+    <a href={href} target="_blank" rel="noreferrer" aria-label={label}
+      className="flex size-9 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-ring [&_svg]:size-4">
+      {children}
+    </a>
+    </Tip>
+  );
+}
+
 /**
  * The profile: one choice from a list that scrolls, with a search at its top, so it works the same for two
  * profiles or fifty. The search is a combobox (arrow keys move, Enter chooses, Escape closes).

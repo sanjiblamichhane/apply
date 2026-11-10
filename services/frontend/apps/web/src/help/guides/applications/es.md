@@ -11,4 +11,4 @@ Todo lo que usted solicita, en su proceso.
 
 **Tablero** y **Lista** muestran las mismas solicitudes; el filtro encuentra una por título u organización. Cada paquete tiene sus propias etapas (consulte [Paquetes](../packs/)).
 
-**Eliminar** en una solicitud la quita, con sus documentos e historial; la oferta se conserva. **Deshacer** la recupera durante unos segundos. En una pantalla ancha, ✕ cierra la solicitud que está junto al tablero.
+**Eliminar** en una solicitud la quita, con sus documentos e historial; la oferta se conserva. **Deshacer** la recupera durante unos segundos. En una pantalla ancha, la solicitud se abre junto al tablero y ✕ la cierra. Sus partes están en pestañas: **Documentos**, **Kit de solicitud**, los detalles y **Notas e historial**.

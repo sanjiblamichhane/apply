@@ -72,7 +72,14 @@ def respond(body: dict, write_delay: float) -> str:
     if "You write cover letters" in prompt:
         return f"Dear Hiring Manager,\n\nI'd like to bring my work as {roles or 'an engineer'} to this role.\n\n{name}"
     # One embellished line, as a small model writes: the claim check is there to catch it.
-    return f"# {name}\n\n### Experience\n{roles}\n- Led a team of 12 engineers\n\n### Skills\n{skills}"
+    resume = f"# {name}\n\n### Experience\n{roles}\n- Led a team of 12 engineers\n\n### Skills\n{skills}"
+    # A rewrite: the person's corrections, as the prompt asks (what's wrong replaced, or its line taken out).
+    for c in person.get("corrections_from_you", []) if "THIS IS A REWRITE" in prompt else []:
+        if c["true"] == "(take it out)":
+            resume = "\n".join(line for line in resume.splitlines() if c["wrong"] not in line)
+        else:
+            resume = resume.replace(c["wrong"], c["true"])
+    return resume
 
 
 def read_resume(text: str) -> dict:

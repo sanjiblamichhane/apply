@@ -13,7 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from apply.errors import Conflict, ErrorCode, NotFound
 from apply.libs import storage
 from apply.libs.jobs import JobContext
-from apply.libs.render import Kind, render_html, render_pdf
+from apply.libs.render import Kind, render_html, render_pdf, render_word
 from apply.packs import get_pack
 from apply.packs.base import ProfileInput
 from apply.runtime import Runtime
@@ -50,7 +50,7 @@ async def digest_of(session: AsyncSession, doc: ApplicationDocument) -> str:
     return rendered_hash(doc.content_markdown, template)
 
 
-KINDS = {"pdf": files.PDF, "html": files.HTML}
+KINDS = {"pdf": files.PDF, "html": files.HTML, "docx": files.DOCX}
 
 
 async def _ready(
@@ -93,21 +93,39 @@ async def edit(
         source="edited",
         model=base.model,
         finished_at=datetime.now(UTC),
-        # Decisions on warnings carry over; the check keeps them for the same words.
-        claim_warnings=[w for w in base.claim_warnings if w.get("resolved")],
+        # "It's true" carries over (the check keeps it for the same words); a correction was for the old wording.
+        claim_warnings=[w for w in base.claim_warnings if w.get("resolved") == "kept"],
+        revision=carried(base),
     )
     await after_written(session, edited)
     return edited
 
 
+def carried(base: ApplicationDocument) -> dict | None:
+    """The corrections a version was written with, for the next: a fact the person gave once stays given."""
+    corrections = (base.revision or {}).get("corrections") or []
+    return {"corrections": corrections} if corrections else None
+
+
 async def resolve(
-    session: AsyncSession, owner_id: str, application_id: str, document_id: str, warning_id: str, resolution: str
+    session: AsyncSession,
+    owner_id: str,
+    application_id: str,
+    document_id: str,
+    warning_id: str,
+    resolution: str,
+    correction: str = "",
 ) -> ApplicationDocument:
+    """ "It's true" (kept), "It's wrong" with what's true instead (empty: take it out), or open again."""
     doc = await _ready(session, owner_id, application_id, document_id, for_update=True)
     warnings = list(doc.claim_warnings or [])
     for i, warning in enumerate(warnings):
         if warning.get("id") == warning_id:
-            warnings[i] = {**warning, "resolved": resolution if resolution in ("kept",) else None}
+            decided = {k: v for k, v in warning.items() if k != "correction"}
+            decided["resolved"] = resolution if resolution in ("kept", "wrong") else None
+            if resolution == "wrong":
+                decided["correction"] = correction.strip()
+            warnings[i] = decided
             doc.claim_warnings = warnings
             await session.flush()
             return doc
@@ -138,8 +156,8 @@ async def check_again(
 
 async def render(rt: Runtime, ctx: JobContext) -> None:
     """
-    ``document.render``: the version in the template, as its page (HTML) and as a tagged PDF, kept by content, so
-    an unchanged version isn't redone.
+    ``document.render``: the version in the template, as its page (HTML) and as a tagged PDF, and as a Word file
+    to edit, kept by content, so an unchanged version isn't redone.
     """
     document_id = ctx.payload["document_id"]
     async with rt.db.transaction() as session:
@@ -184,6 +202,10 @@ async def render(rt: Runtime, ctx: JobContext) -> None:
         made["html"] = page
     if "pdf" in missing:
         made["pdf"] = await asyncio.to_thread(render_pdf, page, paper=rt.settings.pdf_paper)
+    if "docx" in missing:
+        made["docx"] = render_word(
+            markdown, kind=layout, title=title, description=description, lang="en", paper=rt.settings.pdf_paper
+        )
     for kind, data in made.items():
         key = storage.document_file(owner_id, document_id, digest, kind)
         await files.put(rt, key, data, KINDS[kind])  # the file first: a saved row always has its file

@@ -83,6 +83,17 @@ async def test_claims_are_checked_reviewed_and_the_pdf_is_made(client, owner, mo
     assert pdf.headers["content-type"] == "application/pdf" and pdf.content.startswith(b"%PDF-")
     reader = PdfReader(io.BytesIO(pdf.content))
     assert "/StructTreeRoot" in reader.trailer["/Root"] and reader.metadata["/Title"] == "Sam Rai - Resume"
+    # And as a Word file to edit: a download, with the same outline.
+    word = await poll_pdf(client, f"{base}/{doc['id']}/docx")
+    assert word.headers["content-type"] == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    assert word.headers["content-disposition"].startswith("attachment") and word.content.startswith(b"PK")
+    from docx import Document as read_docx
+
+    paragraphs = read_docx(io.BytesIO(word.content)).paragraphs
+    assert (paragraphs[0].style.name, paragraphs[0].text) == ("Heading 1", "Sam Rai")
+    assert ("List Bullet", "Led a team of 12 engineers building fleet software") in [
+        (x.style.name, x.text) for x in paragraphs
+    ]
 
     # "It's true" on the number; edit the rest away: a new version, checked again, the decision kept.
     number = next(w for w in doc["claim_warnings"] if w["kind"] == "number")
@@ -188,3 +199,86 @@ async def test_another_account_cant_touch_it(client, owner, other_client, model_
         other_client.post(f"/api/v1/applications/{app_id}/submissions", json={}),
     ):
         assert (await call).status_code == 404
+
+
+async def test_its_wrong_with_whats_true_then_rewritten_from_the_corrections(client, owner, model_server, worker, rt):
+    from apply.logic import portable
+
+    prompts: list[str] = []
+    rewritten = EMBELLISHED.replace("12 engineers building fleet software", "5 engineers").replace(
+        "- Mentored [CONFIRM: how many] juniors\n", "- Moved to Kathmandu\n"
+    )
+    model(model_server)
+    plain = model_server.responder
+
+    def respond(body):
+        prompt = body["messages"][0]["content"]
+        prompts.append(prompt)
+        return rewritten if "THIS IS A REWRITE" in prompt else plain(body)
+
+    model_server.responder = respond
+    app_id, doc = await written(client, worker)
+    base = f"/api/v1/applications/{app_id}/documents"
+    number = next(w for w in doc["claim_warnings"] if w["kind"] == "number")
+    fleet = next(w for w in doc["claim_warnings"] if w["quote"] == "building fleet software")
+    # Each warning in its sentence.
+    assert number["quote"] == "12 engineers"
+    assert number["sentence"] == fleet["sentence"] == "Led a team of 12 engineers building fleet software"
+
+    # Nothing said yet: nothing to rewrite from.
+    nothing = await client.post(f"{base}/{doc['id']}/rewrite", json={"notes": "  "})
+    assert nothing.status_code == 409 and nothing.json()["code"] == "NOTHING_TO_REWRITE"
+
+    # "It's wrong": with what's true, or empty to take it out. Too long a correction is refused.
+    too_long = await client.post(
+        f"{base}/{doc['id']}/warnings/{number['id']}", json={"resolution": "wrong", "correction": "x" * 501}
+    )
+    assert too_long.status_code == 422
+    wrong = await client.post(
+        f"{base}/{doc['id']}/warnings/{number['id']}", json={"resolution": "wrong", "correction": " 5 engineers "}
+    )
+    marked = next(w for w in wrong.json()["claim_warnings"] if w["id"] == number["id"])
+    assert marked["resolved"] == "wrong" and marked["correction"] == "5 engineers"
+    await client.post(f"{base}/{doc['id']}/warnings/{fleet['id']}", json={"resolution": "wrong"})
+    # Looked at again, then wrong once more: the correction goes with "open".
+    reopened = await client.post(f"{base}/{doc['id']}/warnings/{number['id']}", json={"resolution": "open"})
+    assert next(w for w in reopened.json()["claim_warnings"] if w["id"] == number["id"])["correction"] is None
+    await client.post(
+        f"{base}/{doc['id']}/warnings/{number['id']}", json={"resolution": "wrong", "correction": "5 engineers"}
+    )
+
+    queued = await client.post(f"{base}/{doc['id']}/rewrite", json={"notes": "Say I moved to Kathmandu."})
+    assert queued.status_code == 202 and queued.json()["status"] == "pending"
+    assert queued.json()["source"] == "rewritten"
+    again = await poll(
+        client, f"{base}/{queued.json()['id']}", lambda d: d["status"] == "ready" and d["claims_status"] != "pending"
+    )
+    assert again["version"] == 2 and again["is_active"] and again["source"] == "rewritten"
+    assert "5 engineers" in again["content_markdown"] and "fleet" not in again["content_markdown"]
+    assert not (await client.get(f"{base}/{doc['id']}")).json()["is_active"]
+
+    # The writer had the version read, what's wrong in it, what's true, and the notes, as the person's facts.
+    brief = next(p for p in prompts if "THIS IS A REWRITE" in p)
+    assert "<<<PREVIOUS\n" in brief and "Led a team of 12 engineers building fleet software" in brief
+    assert (
+        '"12 engineers" (in "Led a team of 12 engineers building fleet software") is wrong. What is true: 5 engineers'
+        in brief
+    )
+    assert (
+        '"building fleet software" (in "Led a team of 12 engineers building fleet software") is wrong. Take it out.'
+        in brief
+    )
+    assert "- Say I moved to Kathmandu." in brief and '"corrections_from_you"' in brief and '"notes_from_you"' in brief
+    # Checked against them too: the corrected number isn't flagged.
+    assert not [w for w in again["claim_warnings"] if w["kind"] == "number"]
+
+    # Edited after, and exported: the corrections stay with the document.
+    edited = await client.put(f"{base}/{again['id']}/content", json={"content_markdown": rewritten + "\nMore.\n"})
+    assert edited.status_code == 201 and edited.json()["source"] == "edited"
+    me = (await client.get("/api/v1/auth/me")).json()
+    async with rt.db.transaction() as session:
+        exported = await portable.export(session, me["id"])
+    docs = [d for a in exported.applications for d in a.documents]
+    assert {d.source for d in docs} == {"generated", "rewritten", "edited"}
+    last = next(d for d in docs if d.source == "edited")
+    assert [c["correction"] for c in last.revision["corrections"]] == ["5 engineers", ""]

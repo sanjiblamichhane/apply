@@ -1,5 +1,5 @@
 # apply's backend: the API (`apply serve`) and the worker (`apply worker`) from one image.
-FROM python:3.12-slim AS build
+FROM python:3.15-slim AS build
 COPY --from=ghcr.io/astral-sh/uv:0.8 /uv /usr/local/bin/uv
 ENV UV_COMPILE_BYTECODE=1 UV_LINK_MODE=copy UV_PYTHON_DOWNLOADS=never
 WORKDIR /app
@@ -11,7 +11,7 @@ COPY alembic.ini README.md* ./
 COPY --from=demo john-doe.json ./demo/john-doe.json
 RUN uv sync --frozen --no-dev
 
-FROM python:3.12-slim
+FROM python:3.15-slim
 # Pango and fontconfig: the PDF renderer prints documents with them (in apply's own fonts, libs/render/fonts).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends libpango-1.0-0 libpangoft2-1.0-0 fontconfig \
